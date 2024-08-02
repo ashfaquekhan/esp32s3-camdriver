@@ -1,15 +1,33 @@
 dependencies:
+  espressif/cmake_utilities:
+    component_hash: 351350613ceafba240b761b4ea991e0f231ac7a9f59a9ee901f751bddc0bb18f
+    source:
+      service_url: https://api.components.espressif.com/
+      type: service
+    version: 0.5.3
   espressif/esp32-camera:
     component_hash: 4aadd189e9ca97298f1d69920f2d8c6b07cb3cbca014584b60e96de8a3cbb249
     source:
       service_url: https://api.components.espressif.com/
       type: service
     version: 2.0.10
+  espressif/tinyusb:
+    component_hash: 214989d502fc168241a4a4f83b097d8ac44a93cd6f1787b4ac10069a8b3bebd3
+    source:
+      service_url: https://api.components.espressif.com/
+      type: service
+    version: 0.15.0~10
+  espressif/usb_device_uvc:
+    component_hash: f86ee44e64f3914474919a14ac4d47082d6a2888a62c239e6e9dc58c32da4682
+    source:
+      service_url: https://api.components.espressif.com/
+      type: service
+    version: 1.1.0
   idf:
     component_hash: null
     source:
       type: idf
     version: 5.0.6
-manifest_hash: 1d63227e428f6690b27f5b3032c2db4ee1647a79665e998929870c5eeeb011d1
+manifest_hash: 8501930522790700d462831bb204cda6b8dab0e3210a96b4d3ec3283f718255c
 target: esp32s3
 version: 1.0.0

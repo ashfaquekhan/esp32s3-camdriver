@@ -61,4 +61,6 @@ D:/project-name/build/esp-idf/ulp/libulp.a
 D:/project-name/build/esp-idf/usb/libusb.a
 D:/project-name/build/esp-idf/wifi_provisioning/libwifi_provisioning.a
 D:/project-name/build/esp-idf/espressif__esp32-camera/libespressif__esp32-camera.a
+D:/project-name/build/esp-idf/espressif__tinyusb/libespressif__tinyusb.a
+D:/project-name/build/esp-idf/espressif__usb_device_uvc/libespressif__usb_device_uvc.a
 D:/project-name/build/esp-idf/main/libmain.a
