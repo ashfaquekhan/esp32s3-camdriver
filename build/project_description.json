@@ -1,7 +1,7 @@
 {
     "version":            "1",
     "project_name":       "project-name",
-    "project_version":    "725926e-dirty",
+    "project_version":    "f9f2658-dirty",
     "project_path":       "D:/project-name",
     "idf_path":           "C:/Users/ashfa/esp/v5.0.6/esp-idf",
     "build_dir":          "D:/project-name/build",
@@ -804,7 +804,7 @@
             "managed_reqs": [],
             "managed_priv_reqs": [ "espressif__esp32-camera", "espressif__usb_device_uvc" ],
             "file": "D:/project-name/build/esp-idf/main/libmain.a",
-            "sources": [ "D:/project-name/main/main.c" ],
+            "sources": [ "D:/project-name/main/connect_wifi.c", "D:/project-name/main/main.c" ],
             "include_dirs": [ "." ]
         },
         "mbedtls": {
