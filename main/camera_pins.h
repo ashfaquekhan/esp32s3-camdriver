@@ -1,8 +1,8 @@
 #ifndef CAMERA_PINS_H_
 #define CAMERA_PINS_H_
 
-#define CAMERA_MODEL_XIAO_ESP32S3 1
-// #define CUSTOM_BOARD 1
+// #define CAMERA_MODEL_XIAO_ESP32S3 1
+#define CUSTOM_BOARD 1
 
 
 #if defined(CUSTOM_BOARD)

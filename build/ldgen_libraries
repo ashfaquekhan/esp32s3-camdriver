@@ -48,6 +48,7 @@ D:/project-name/build/esp-idf/esp_lcd/libesp_lcd.a
 D:/project-name/build/esp-idf/protobuf-c/libprotobuf-c.a
 D:/project-name/build/esp-idf/protocomm/libprotocomm.a
 D:/project-name/build/esp-idf/esp_local_ctrl/libesp_local_ctrl.a
+D:/project-name/build/esp-idf/esp_psram/libesp_psram.a
 D:/project-name/build/esp-idf/espcoredump/libespcoredump.a
 D:/project-name/build/esp-idf/wear_levelling/libwear_levelling.a
 D:/project-name/build/esp-idf/sdmmc/libsdmmc.a

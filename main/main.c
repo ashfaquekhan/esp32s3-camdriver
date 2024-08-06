@@ -45,8 +45,9 @@ static esp_err_t init_camera(void)
 
         .xclk_freq_hz = CONFIG_XCLK_FREQ,
 
-        .frame_size = FRAMESIZE_HVGA,
+        .frame_size = FRAMESIZE_QVGA,
         .pixel_format = PIXFORMAT_JPEG,
+        // .fb_location = CAMERA_FB_IN_PSRAM,
         .fb_location = CAMERA_FB_IN_DRAM,
         .jpeg_quality = 20,
         .fb_count = 1,
