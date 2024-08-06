@@ -6,11 +6,28 @@
 
 
 #if defined(CUSTOM_BOARD)
+    // #define CAM_PIN_PWDN  -1
+    // #define CAM_PIN_RESET -1
+    // #define CAM_PIN_XCLK  4
+    // #define CAM_PIN_SIOD  33
+    // #define CAM_PIN_SIOC  34
+
+    // #define CAM_PIN_D7    18
+    // #define CAM_PIN_D6    17
+    // #define CAM_PIN_D5    16
+    // #define CAM_PIN_D4    15
+    // #define CAM_PIN_D3    14
+    // #define CAM_PIN_D2    13
+    // #define CAM_PIN_D1    12
+    // #define CAM_PIN_D0    11
+    // #define CAM_PIN_VSYNC 5
+    // #define CAM_PIN_HREF  41
+    // #define CAM_PIN_PCLK  42
     #define CAM_PIN_PWDN  -1
     #define CAM_PIN_RESET -1
     #define CAM_PIN_XCLK  4
-    #define CAM_PIN_SIOD  33
-    #define CAM_PIN_SIOC  34
+    #define CAM_PIN_SIOD  9
+    #define CAM_PIN_SIOC  10
 
     #define CAM_PIN_D7    18
     #define CAM_PIN_D6    17
@@ -21,8 +38,9 @@
     #define CAM_PIN_D1    12
     #define CAM_PIN_D0    11
     #define CAM_PIN_VSYNC 5
-    #define CAM_PIN_HREF  41
-    #define CAM_PIN_PCLK  42
+    #define CAM_PIN_HREF  6
+    #define CAM_PIN_PCLK  7
+
 
 #elif defined(CAMERA_MODEL_XIAO_ESP32S3)
 
