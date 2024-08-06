@@ -1,7 +1,7 @@
 {
     "version":            "1",
     "project_name":       "project-name",
-    "project_version":    "ce11cfd-dirty",
+    "project_version":    "54f1893-dirty",
     "project_path":       "D:/project-name",
     "idf_path":           "C:/Users/ashfa/esp/v5.0.6/esp-idf",
     "build_dir":          "D:/project-name/build",
@@ -467,14 +467,14 @@
             "target": "___idf_esp_psram",
             "prefix": "idf",
             "dir": "C:/Users/ashfa/esp/v5.0.6/esp-idf/components/esp_psram",
-            "type": "LIBRARY",
+            "type": "CONFIG_ONLY",
             "lib": "__idf_esp_psram",
             "reqs": [],
             "priv_reqs": [ "efuse", "heap", "spi_flash" ],
             "managed_reqs": [],
             "managed_priv_reqs": [],
-            "file": "D:/project-name/build/esp-idf/esp_psram/libesp_psram.a",
-            "sources": [ "C:/Users/ashfa/esp/v5.0.6/esp-idf/components/esp_psram/esp_psram.c", "C:/Users/ashfa/esp/v5.0.6/esp-idf/components/esp_psram/mmu.c", "C:/Users/ashfa/esp/v5.0.6/esp-idf/components/esp_psram/mmu_psram_flash.c", "C:/Users/ashfa/esp/v5.0.6/esp-idf/components/esp_psram/ext_mem_layout.c", "C:/Users/ashfa/esp/v5.0.6/esp-idf/components/esp_psram/esp32s3/esp_psram_impl_quad.c" ],
+            "file": "",
+            "sources": [],
             "include_dirs": [ "include" ]
         },
         "esp_ringbuf": {
