@@ -26,8 +26,8 @@
     #define CAM_PIN_PWDN  -1
     #define CAM_PIN_RESET -1
     #define CAM_PIN_XCLK  4
-    #define CAM_PIN_SIOD  9
-    #define CAM_PIN_SIOC  10
+    #define CAM_PIN_SIOD  -1//9
+    #define CAM_PIN_SIOC  -1//10
 
     #define CAM_PIN_D7    18
     #define CAM_PIN_D6    17
