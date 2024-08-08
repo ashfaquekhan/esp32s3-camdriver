@@ -1055,3 +1055,5 @@
 54	246	7445179399821642	D:/project-name/build/bootloader/bootloader.elf	ccf89bf6fabb6ce6
 54	246	7445179399821642	D:/project-name/build/bootloader/bootloader.bin	ccf89bf6fabb6ce6
 54	246	7445179399821642	D:/project-name/build/bootloader/bootloader.map	ccf89bf6fabb6ce6
+1	105444921	0	CMakeFiles/confserver	15cf113fe2a63b6d
+1	105444921	0	D:/project-name/build/CMakeFiles/confserver	15cf113fe2a63b6d
