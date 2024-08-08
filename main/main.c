@@ -8,7 +8,7 @@
 #include "esp_timer.h"
 #include "camera_pins.h"
 #include "connect_wifi.h"
-#include "driver/i2c.h"
+
 
 static const char *TAG = "esp32-cam Webserver";
 
@@ -19,36 +19,47 @@ static const char* _STREAM_PART = "Content-Type: image/jpeg\r\nContent-Length: %
 
 #define CONFIG_XCLK_FREQ 20000000 
 
-#define I2C_MASTER_SCL_IO_0           10    /*!< gpio number for I2C master clock (camera 0) */
-#define I2C_MASTER_SDA_IO_0           9    /*!< gpio number for I2C master data (camera 0) */
-#define I2C_MASTER_SCL_IO_1           19    /*!< gpio number for I2C master clock (camera 1) */
-#define I2C_MASTER_SDA_IO_1           20    /*!< gpio number for I2C master data (camera 1) */
-#define I2C_MASTER_NUM_0              I2C_NUM_0   /*!< I2C port number for master dev (camera 0) */
-#define I2C_MASTER_NUM_1              I2C_NUM_1   /*!< I2C port number for master dev (camera 1) */
-#define I2C_MASTER_FREQ_HZ          100000     /*!< I2C master clock frequency */
-#define I2C_MASTER_TX_BUF_DISABLE   0    /*!< I2C master doesn't need buffer */
-#define I2C_MASTER_RX_BUF_DISABLE   0    /*!< I2C master doesn't need buffer */
-
-static esp_err_t i2c_master_init(i2c_port_t i2c_num, gpio_num_t sda_io_num, gpio_num_t scl_io_num)
+static esp_err_t init_camera(void)
 {
-    i2c_config_t conf = {
-        .mode = I2C_MODE_MASTER,
-        .sda_io_num = sda_io_num,
-        .sda_pullup_en = GPIO_PULLUP_ENABLE,
-        .scl_io_num = scl_io_num,
-        .scl_pullup_en = GPIO_PULLUP_ENABLE,
-        .master.clk_speed = I2C_MASTER_FREQ_HZ,
-    };
-    esp_err_t err = i2c_param_config(i2c_num, &conf);
-    if (err != ESP_OK) {
+    camera_config_t camera_config = {
+
+        .ledc_timer = LEDC_TIMER_0,
+        .ledc_channel = LEDC_CHANNEL_0,
+        .pin_pwdn  = CAM_PIN_PWDN,
+        .pin_reset = CAM_PIN_RESET,
+        .pin_xclk = CAM_PIN_XCLK,
+        .pin_sccb_sda = CAM_PIN_SIOD,
+        .pin_sccb_scl = CAM_PIN_SIOC,
+
+        .pin_d7 = CAM_PIN_D7,
+        .pin_d6 = CAM_PIN_D6,
+        .pin_d5 = CAM_PIN_D5,
+        .pin_d4 = CAM_PIN_D4,
+        .pin_d3 = CAM_PIN_D3,
+        .pin_d2 = CAM_PIN_D2,
+        .pin_d1 = CAM_PIN_D1,
+        .pin_d0 = CAM_PIN_D0,
+        .pin_vsync = CAM_PIN_VSYNC,
+        .pin_href = CAM_PIN_HREF,
+        .pin_pclk = CAM_PIN_PCLK,
+
+        .xclk_freq_hz = CONFIG_XCLK_FREQ,
+
+        .frame_size = FRAMESIZE_QVGA,
+        .pixel_format = PIXFORMAT_JPEG,
+        // .fb_location = CAMERA_FB_IN_PSRAM,
+        .fb_location = CAMERA_FB_IN_DRAM,
+        .jpeg_quality = 20,
+        .fb_count = 1,
+        .grab_mode = CAMERA_GRAB_WHEN_EMPTY
+        };
+        //CAMERA_GRAB_LATEST. Sets when buffers should be filled
+    esp_err_t err = esp_camera_init(&camera_config);
+    if (err != ESP_OK)
+    {
         return err;
     }
-    return i2c_driver_install(i2c_num, conf.mode, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0);
-}
-
-static esp_err_t init_camera(camera_config_t *camera_config)
-{
-    return esp_camera_init(camera_config);
+    return ESP_OK;
 }
 
 esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
@@ -108,6 +119,7 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
         int64_t frame_time = fr_end - last_frame;
         last_frame = fr_end;
         frame_time /= 1000;
+        // ESP_LOGI(TAG, "MJPG: %uKB %ums (%.1ffps)",(uint32_t)(_jpg_buf_len/1024),(uint32_t)frame_time, 1000.0 / (uint32_t)frame_time);
 
     }
 
@@ -133,100 +145,6 @@ httpd_handle_t setup_server(void)
     return stream_httpd;
 }
 
-void camera_task_0(void *pvParameters)
-{
-    esp_err_t err;
-    camera_config_t camera_config_0 = {
-        .ledc_timer = LEDC_TIMER_0,
-        .ledc_channel = LEDC_CHANNEL_0,
-        .pin_pwdn  = CAM_PIN_PWDN,
-        .pin_reset = CAM_PIN_RESET,
-        .pin_xclk = CAM_PIN_XCLK,
-        .pin_sccb_sda = CAM_PIN_SIOD,
-        .pin_sccb_scl = CAM_PIN_SIOC,
-        .pin_d7 = CAM_PIN_D7,
-        .pin_d6 = CAM_PIN_D6,
-        .pin_d5 = CAM_PIN_D5,
-        .pin_d4 = CAM_PIN_D4,
-        .pin_d3 = CAM_PIN_D3,
-        .pin_d2 = CAM_PIN_D2,
-        .pin_d1 = CAM_PIN_D1,
-        .pin_d0 = CAM_PIN_D0,
-        .pin_vsync = CAM_PIN_VSYNC,
-        .pin_href = CAM_PIN_HREF,
-        .pin_pclk = CAM_PIN_PCLK,
-        .xclk_freq_hz = CONFIG_XCLK_FREQ,
-        .frame_size = FRAMESIZE_QVGA,
-        .pixel_format = PIXFORMAT_JPEG,
-        .fb_location = CAMERA_FB_IN_DRAM,
-        .jpeg_quality = 20,
-        .fb_count = 1,
-        .grab_mode = CAMERA_GRAB_WHEN_EMPTY
-    };
-
-    err = init_camera(&camera_config_0);
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Camera 0 initialization failed: %s", esp_err_to_name(err));
-        vTaskDelete(NULL);
-    }
-
-    while (true) {
-        camera_fb_t * fb = esp_camera_fb_get();
-        if (fb) {
-            // Process frame (e.g., send to web server)
-            esp_camera_fb_return(fb);
-        }
-        vTaskDelay(1 / portTICK_PERIOD_MS); // Small delay to prevent watchdog timer reset
-    }
-}
-
-void camera_task_1(void *pvParameters)
-{
-    esp_err_t err;
-    camera_config_t camera_config_1 ={
-        .ledc_timer = LEDC_TIMER_1,
-        .ledc_channel = LEDC_CHANNEL_1,
-        .pin_pwdn  = CAM_PIN_PWDN_2,
-        .pin_reset = CAM_PIN_RESET_2,
-        .pin_xclk = CAM_PIN_XCLK_2,
-        .pin_sccb_sda = CAM_PIN_SIOD_2,
-        .pin_sccb_scl = CAM_PIN_SIOC_2,
-        .pin_d7 = CAM_PIN_D7_2,
-        .pin_d6 = CAM_PIN_D6_2,
-        .pin_d5 = CAM_PIN_D5_2,
-        .pin_d4 = CAM_PIN_D4_2,
-        .pin_d3 = CAM_PIN_D3_2,
-        .pin_d2 = CAM_PIN_D2_2,
-        .pin_d1 = CAM_PIN_D1_2,
-        .pin_d0 = CAM_PIN_D0_2,
-        .pin_vsync = CAM_PIN_VSYNC_2,
-        .pin_href = CAM_PIN_HREF_2,
-        .pin_pclk = CAM_PIN_PCLK_2,
-        .xclk_freq_hz = CONFIG_XCLK_FREQ,
-        .frame_size = FRAMESIZE_QVGA,
-        .pixel_format = PIXFORMAT_JPEG,
-        .fb_location = CAMERA_FB_IN_DRAM,
-        .jpeg_quality = 20,
-        .fb_count = 1,
-        .grab_mode = CAMERA_GRAB_WHEN_EMPTY
-    };
-
-    err = init_camera(&camera_config_1);
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Camera 1 initialization failed: %s", esp_err_to_name(err));
-        vTaskDelete(NULL);
-    }
-
-    while (true) {
-        camera_fb_t * fb = esp_camera_fb_get();
-        if (fb) {
-            // Process frame (e.g., send to web server)
-            esp_camera_fb_return(fb);
-        }
-        vTaskDelay(1 / portTICK_PERIOD_MS); // Small delay to prevent watchdog timer reset
-    }
-}
-
 void app_main()
 {
     esp_err_t err;
@@ -243,26 +161,15 @@ void app_main()
 
     if (wifi_connect_status)
     {
-        // Initialize I2C for both cameras
-        err = i2c_master_init(I2C_MASTER_NUM_0, I2C_MASTER_SDA_IO_0, I2C_MASTER_SCL_IO_0);
-        if (err != ESP_OK) {
-            ESP_LOGI(TAG, "I2C initialization for Camera 0 failed\n");
+        err = init_camera();
+        if (err != ESP_OK)
+        {
+            printf("err: %s\n", esp_err_to_name(err));
             return;
         }
-
-        err = i2c_master_init(I2C_MASTER_NUM_1, I2C_MASTER_SDA_IO_1, I2C_MASTER_SCL_IO_1);
-        if (err != ESP_OK) {
-            ESP_LOGI(TAG, "I2C initialization for Camera 1 failed\n");
-            return;
-        }
-
-        // Create tasks for camera 0 and camera 1
-        xTaskCreatePinnedToCore(camera_task_0, "camera_task_0", 4096, NULL, 5, NULL, 0);
-        xTaskCreatePinnedToCore(camera_task_1, "camera_task_1", 4096, NULL, 5, NULL, 1);
-
         setup_server();
         ESP_LOGI(TAG, "ESP32 CAM Web Server is up and running\n");
     }
     else
-        ESP_LOGI(TAG, "Failed to connect with Wi-Fi, check your network credentials\n");
+        ESP_LOGI(TAG, "Failed to connected with Wi-Fi, check your network Credentials\n");
 }
