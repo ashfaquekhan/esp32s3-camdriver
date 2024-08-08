@@ -21,8 +21,8 @@ static const char* _STREAM_PART = "Content-Type: image/jpeg\r\nContent-Length: %
 
 #define I2C_MASTER_SCL_IO_0           10    /*!< gpio number for I2C master clock (camera 0) */
 #define I2C_MASTER_SDA_IO_0           9    /*!< gpio number for I2C master data (camera 0) */
-#define I2C_MASTER_SCL_IO_1           12    /*!< gpio number for I2C master clock (camera 1) */
-#define I2C_MASTER_SDA_IO_1           11    /*!< gpio number for I2C master data (camera 1) */
+#define I2C_MASTER_SCL_IO_1           19    /*!< gpio number for I2C master clock (camera 1) */
+#define I2C_MASTER_SDA_IO_1           20    /*!< gpio number for I2C master data (camera 1) */
 #define I2C_MASTER_NUM_0              I2C_NUM_0   /*!< I2C port number for master dev (camera 0) */
 #define I2C_MASTER_NUM_1              I2C_NUM_1   /*!< I2C port number for master dev (camera 1) */
 #define I2C_MASTER_FREQ_HZ          100000     /*!< I2C master clock frequency */
