@@ -18,74 +18,85 @@ static const char* _STREAM_PART = "Content-Type: image/jpeg\r\nContent-Length: %
 
 #define CONFIG_XCLK_FREQ 20000000 
 
-static camera_config_t camera_config_1 = {
-    .ledc_timer = LEDC_TIMER_0,
-    .ledc_channel = LEDC_CHANNEL_0,
-    .pin_pwdn  = CAM_PIN_PWDN,
-    .pin_reset = CAM_PIN_RESET,
-    .pin_xclk = CAM_PIN_XCLK,
-    .pin_sccb_sda = CAM_PIN_SIOD,
-    .pin_sccb_scl = CAM_PIN_SIOC,
-    .pin_d7 = CAM_PIN_D7,
-    .pin_d6 = CAM_PIN_D6,
-    .pin_d5 = CAM_PIN_D5,
-    .pin_d4 = CAM_PIN_D4,
-    .pin_d3 = CAM_PIN_D3,
-    .pin_d2 = CAM_PIN_D2,
-    .pin_d1 = CAM_PIN_D1,
-    .pin_d0 = CAM_PIN_D0,
-    .pin_vsync = CAM_PIN_VSYNC,
-    .pin_href = CAM_PIN_HREF,
-    .pin_pclk = CAM_PIN_PCLK,
-    .xclk_freq_hz = CONFIG_XCLK_FREQ,
-    .frame_size = FRAMESIZE_QVGA,
-    .pixel_format = PIXFORMAT_JPEG,
-    .fb_location = CAMERA_FB_IN_DRAM,
-    .jpeg_quality = 20,
-    .fb_count = 1,
-    .grab_mode = CAMERA_GRAB_WHEN_EMPTY
-};
-
-static camera_config_t camera_config_2 = {
-    .ledc_timer = LEDC_TIMER_0,
-    .ledc_channel = LEDC_CHANNEL_0,
-    .pin_pwdn  = CAM_PIN_PWDN_2,
-    .pin_reset = CAM_PIN_RESET_2,
-    .pin_xclk = CAM_PIN_XCLK_2,
-    .pin_sccb_sda = CAM_PIN_SIOD_2,
-    .pin_sccb_scl = CAM_PIN_SIOC_2,
-    .pin_d7 = CAM_PIN_D7_2,
-    .pin_d6 = CAM_PIN_D6_2,
-    .pin_d5 = CAM_PIN_D5_2,
-    .pin_d4 = CAM_PIN_D4_2,
-    .pin_d3 = CAM_PIN_D3_2,
-    .pin_d2 = CAM_PIN_D2_2,
-    .pin_d1 = CAM_PIN_D1_2,
-    .pin_d0 = CAM_PIN_D0_2,
-    .pin_vsync = CAM_PIN_VSYNC_2,
-    .pin_href = CAM_PIN_HREF_2,
-    .pin_pclk = CAM_PIN_PCLK_2,
-    .xclk_freq_hz = CONFIG_XCLK_FREQ,
-    .frame_size = FRAMESIZE_QVGA,
-    .pixel_format = PIXFORMAT_JPEG,
-    .fb_location = CAMERA_FB_IN_DRAM,
-    .jpeg_quality = 20,
-    .fb_count = 1,
-    .grab_mode = CAMERA_GRAB_WHEN_EMPTY
-};
-
-static esp_err_t init_camera(camera_config_t* config)
+// Function to initialize the first camera
+static esp_err_t init_camera_1(void)
 {
-    esp_err_t err = esp_camera_init(config);
+    camera_config_t camera_config = {
+        .ledc_timer = LEDC_TIMER_0,
+        .ledc_channel = LEDC_CHANNEL_0,
+        .pin_pwdn  = CAM_PIN_PWDN,
+        .pin_reset = CAM_PIN_RESET,
+        .pin_xclk = CAM_PIN_XCLK,
+        .pin_sccb_sda = CAM_PIN_SIOD,
+        .pin_sccb_scl = CAM_PIN_SIOC,
+        .pin_d7 = CAM_PIN_D7,
+        .pin_d6 = CAM_PIN_D6,
+        .pin_d5 = CAM_PIN_D5,
+        .pin_d4 = CAM_PIN_D4,
+        .pin_d3 = CAM_PIN_D3,
+        .pin_d2 = CAM_PIN_D2,
+        .pin_d1 = CAM_PIN_D1,
+        .pin_d0 = CAM_PIN_D0,
+        .pin_vsync = CAM_PIN_VSYNC,
+        .pin_href = CAM_PIN_HREF,
+        .pin_pclk = CAM_PIN_PCLK,
+        .xclk_freq_hz = CONFIG_XCLK_FREQ,
+        .frame_size = FRAMESIZE_QVGA,
+        .pixel_format = PIXFORMAT_JPEG,
+        .fb_location = CAMERA_FB_IN_DRAM,
+        .jpeg_quality = 20,
+        .fb_count = 1,
+        .grab_mode = CAMERA_GRAB_WHEN_EMPTY
+    };
+
+    esp_err_t err = esp_camera_init(&camera_config);
     if (err != ESP_OK)
     {
-        ESP_LOGE(TAG, "Camera init failed with error 0x%x", err);
         return err;
     }
     return ESP_OK;
 }
 
-esp_err_t jpg_stream_httpd_handler(httpd_req_t *req) {
+// Function to initialize the second camera
+static esp_err_t init_camera_2(void)
+{
+    camera_config_t camera_config = {
+        .ledc_timer = LEDC_TIMER_1,
+        .ledc_channel = LEDC_CHANNEL_1,
+        .pin_pwdn  = CAM_PIN_PWDN_2,
+        .pin_reset = CAM_PIN_RESET_2,
+        .pin_xclk = CAM_PIN_XCLK_2,
+        .pin_sccb_sda = CAM_PIN_SIOD_2,
+        .pin_sccb_scl = CAM_PIN_SIOC_2,
+        .pin_d7 = CAM_PIN_D7_2,
+        .pin_d6 = CAM_PIN_D6_2,
+        .pin_d5 = CAM_PIN_D5_2,
+        .pin_d4 = CAM_PIN_D4_2,
+        .pin_d3 = CAM_PIN_D3_2,
+        .pin_d2 = CAM_PIN_D2_2,
+        .pin_d1 = CAM_PIN_D1_2,
+        .pin_d0 = CAM_PIN_D0_2,
+        .pin_vsync = CAM_PIN_VSYNC_2,
+        .pin_href = CAM_PIN_HREF_2,
+        .pin_pclk = CAM_PIN_PCLK_2,
+        .xclk_freq_hz = CONFIG_XCLK_FREQ,
+        .frame_size = FRAMESIZE_QVGA,
+        .pixel_format = PIXFORMAT_JPEG,
+        .fb_location = CAMERA_FB_IN_DRAM,
+        .jpeg_quality = 20,
+        .fb_count = 1,
+        .grab_mode = CAMERA_GRAB_WHEN_EMPTY
+    };
+
+    esp_err_t err = esp_camera_init(&camera_config);
+    if (err != ESP_OK)
+    {
+        return err;
+    }
+    return ESP_OK;
+}
+
+esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
     camera_fb_t * fb = NULL;
     esp_err_t res = ESP_OK;
     size_t _jpg_buf_len;
@@ -101,19 +112,11 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req) {
         return res;
     }
 
-    bool toggle_camera = false;
     while(true){
-        toggle_camera = !toggle_camera;
-
-        // Switch frame buffer
-        if (toggle_camera) {
-            fb = esp_camera_fb_get();
-        } else {
-            fb = esp_camera_fb_get();
-        }
-
+        // Capture frame from the first camera
+        fb = esp_camera_fb_get();
         if (!fb) {
-            ESP_LOGE(TAG, "Camera capture failed");
+            ESP_LOGE(TAG, "Camera 1 capture failed");
             res = ESP_FAIL;
             break;
         }
@@ -147,11 +150,56 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req) {
         if(res != ESP_OK){
             break;
         }
+
+        // Switch to the second camera and capture its frame
+        esp_camera_deinit();
+        init_camera_2();
+
+        fb = esp_camera_fb_get();
+        if (!fb) {
+            ESP_LOGE(TAG, "Camera 2 capture failed");
+            res = ESP_FAIL;
+            break;
+        }
+        if(fb->format != PIXFORMAT_JPEG){
+            bool jpeg_converted = frame2jpg(fb, 80, &_jpg_buf, &_jpg_buf_len);
+            if(!jpeg_converted){
+                ESP_LOGE(TAG, "JPEG compression failed");
+                esp_camera_fb_return(fb);
+                res = ESP_FAIL;
+            }
+        } else {
+            _jpg_buf_len = fb->len;
+            _jpg_buf = fb->buf;
+        }
+
+        if(res == ESP_OK){
+            res = httpd_resp_send_chunk(req, _STREAM_BOUNDARY, strlen(_STREAM_BOUNDARY));
+        }
+        if(res == ESP_OK){
+            size_t hlen = snprintf((char *)part_buf, 64, _STREAM_PART, _jpg_buf_len);
+
+            res = httpd_resp_send_chunk(req, (const char *)part_buf, hlen);
+        }
+        if(res == ESP_OK){
+            res = httpd_resp_send_chunk(req, (const char *)_jpg_buf, _jpg_buf_len);
+        }
+        if(fb->format != PIXFORMAT_JPEG){
+            free(_jpg_buf);
+        }
+        esp_camera_fb_return(fb);
+        if(res != ESP_OK){
+            break;
+        }
+
+        // Re-initialize the first camera
+        esp_camera_deinit();
+        init_camera_1();
+
         int64_t fr_end = esp_timer_get_time();
         int64_t frame_time = fr_end - last_frame;
         last_frame = fr_end;
         frame_time /= 1000;
-        // ESP_LOGI(TAG, "MJPG: %uKB %ums (%.1ffps)", (uint32_t)(_jpg_buf_len/1024), (uint32_t)frame_time, 1000.0 / (uint32_t)frame_time);
     }
 
     last_frame = 0;
@@ -168,11 +216,11 @@ httpd_uri_t uri_get = {
 httpd_handle_t setup_server(void)
 {
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-    httpd_handle_t stream_httpd  = NULL;
+    httpd_handle_t stream_httpd = NULL;
 
-    if (httpd_start(&stream_httpd , &config) == ESP_OK)
+    if (httpd_start(&stream_httpd, &config) == ESP_OK)
     {
-        httpd_register_uri_handler(stream_httpd , &uri_get);
+        httpd_register_uri_handler(stream_httpd, &uri_get);
     }
 
     return stream_httpd;
@@ -194,13 +242,7 @@ void app_main()
 
     if (wifi_connect_status)
     {
-        err = init_camera(&camera_config_1);
-        if (err != ESP_OK)
-        {
-            printf("err: %s\n", esp_err_to_name(err));
-            return;
-        }
-        err = init_camera(&camera_config_2);
+        err = init_camera_1();
         if (err != ESP_OK)
         {
             printf("err: %s\n", esp_err_to_name(err));
@@ -211,6 +253,6 @@ void app_main()
     }
     else
     {
-        ESP_LOGI(TAG, "Failed to connect with Wi-Fi, check your network credentials\n");
+        ESP_LOGI(TAG, "Failed to connect to Wi-Fi, check your network Credentials\n");
     }
 }
