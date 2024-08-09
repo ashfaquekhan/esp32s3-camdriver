@@ -111,8 +111,21 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
     uint8_t * _jpg_buf;
     char * part_buf[64];
     static int64_t last_frame = 0;
+    static int last_camera = 0; // Track the last selected camera
+
     if(!last_frame) {
         last_frame = esp_timer_get_time();
+    }
+
+    // Initialize the selected camera if it has changed
+    if (selected_camera != last_camera) {
+        deinit_camera();
+        if (selected_camera == 1) {
+            init_camera_1();
+        } else {
+            init_camera_2();
+        }
+        last_camera = selected_camera;
     }
 
     res = httpd_resp_set_type(req, _STREAM_CONTENT_TYPE);
@@ -121,16 +134,6 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
     }
 
     while(true){
-        if (selected_camera == 1) {
-            // Initialize the first camera
-            deinit_camera();
-            init_camera_1();
-        } else {
-            // Initialize the second camera
-            deinit_camera();
-            init_camera_2();
-        }
-
         fb = esp_camera_fb_get();
         if (!fb) {
             ESP_LOGE(TAG, "Camera %d capture failed", selected_camera);
@@ -222,7 +225,6 @@ esp_err_t index_html_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
-
 httpd_uri_t uri_get = {
     .uri = "/stream",
     .method = HTTP_GET,
@@ -275,6 +277,7 @@ void app_main()
 
     if (wifi_connect_status)
     {
+        // Initialize the default camera
         err = init_camera_1();
         if (err != ESP_OK)
         {
