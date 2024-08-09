@@ -8,7 +8,6 @@
 #include "esp_timer.h"
 #include "camera_pins.h"
 #include "connect_wifi.h"
-#include "esp_log.h"
 
 static const char *TAG = "esp32-cam Webserver";
 
@@ -106,16 +105,13 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req) {
     while(true){
         toggle_camera = !toggle_camera;
 
-        // Switch camera configurations
+        // Switch frame buffer
         if (toggle_camera) {
-            esp_camera_deinit();
-            init_camera(&camera_config_1);
+            fb = esp_camera_fb_get();
         } else {
-            esp_camera_deinit();
-            init_camera(&camera_config_2);
+            fb = esp_camera_fb_get();
         }
 
-        fb = esp_camera_fb_get();
         if (!fb) {
             ESP_LOGE(TAG, "Camera capture failed");
             res = ESP_FAIL;
@@ -199,6 +195,12 @@ void app_main()
     if (wifi_connect_status)
     {
         err = init_camera(&camera_config_1);
+        if (err != ESP_OK)
+        {
+            printf("err: %s\n", esp_err_to_name(err));
+            return;
+        }
+        err = init_camera(&camera_config_2);
         if (err != ESP_OK)
         {
             printf("err: %s\n", esp_err_to_name(err));
