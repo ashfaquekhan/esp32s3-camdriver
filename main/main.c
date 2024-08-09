@@ -9,7 +9,6 @@
 #include "camera_pins.h"
 #include "connect_wifi.h"
 
-
 static const char *TAG = "esp32-cam Webserver";
 
 #define PART_BOUNDARY "123456789000000000000987654321"
@@ -19,10 +18,10 @@ static const char* _STREAM_PART = "Content-Type: image/jpeg\r\nContent-Length: %
 
 #define CONFIG_XCLK_FREQ 20000000 
 
+// Function to initialize the camera
 static esp_err_t init_camera(void)
 {
     camera_config_t camera_config = {
-
         .ledc_timer = LEDC_TIMER_0,
         .ledc_channel = LEDC_CHANNEL_0,
         .pin_pwdn  = CAM_PIN_PWDN,
@@ -30,7 +29,6 @@ static esp_err_t init_camera(void)
         .pin_xclk = CAM_PIN_XCLK,
         .pin_sccb_sda = CAM_PIN_SIOD,
         .pin_sccb_scl = CAM_PIN_SIOC,
-
         .pin_d7 = CAM_PIN_D7,
         .pin_d6 = CAM_PIN_D6,
         .pin_d5 = CAM_PIN_D5,
@@ -42,18 +40,15 @@ static esp_err_t init_camera(void)
         .pin_vsync = CAM_PIN_VSYNC,
         .pin_href = CAM_PIN_HREF,
         .pin_pclk = CAM_PIN_PCLK,
-
         .xclk_freq_hz = CONFIG_XCLK_FREQ,
-
         .frame_size = FRAMESIZE_QVGA,
         .pixel_format = PIXFORMAT_JPEG,
-        // .fb_location = CAMERA_FB_IN_PSRAM,
         .fb_location = CAMERA_FB_IN_DRAM,
         .jpeg_quality = 20,
         .fb_count = 1,
         .grab_mode = CAMERA_GRAB_WHEN_EMPTY
-        };
-        //CAMERA_GRAB_LATEST. Sets when buffers should be filled
+    };
+
     esp_err_t err = esp_camera_init(&camera_config);
     if (err != ESP_OK)
     {
@@ -62,12 +57,13 @@ static esp_err_t init_camera(void)
     return ESP_OK;
 }
 
+// Function to handle streaming
 esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
     camera_fb_t * fb = NULL;
     esp_err_t res = ESP_OK;
     size_t _jpg_buf_len;
     uint8_t * _jpg_buf;
-    char * part_buf[64];
+    char part_buf[64];
     static int64_t last_frame = 0;
     if(!last_frame) {
         last_frame = esp_timer_get_time();
@@ -101,9 +97,8 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
             res = httpd_resp_send_chunk(req, _STREAM_BOUNDARY, strlen(_STREAM_BOUNDARY));
         }
         if(res == ESP_OK){
-            size_t hlen = snprintf((char *)part_buf, 64, _STREAM_PART, _jpg_buf_len);
-
-            res = httpd_resp_send_chunk(req, (const char *)part_buf, hlen);
+            size_t hlen = snprintf(part_buf, 64, _STREAM_PART, _jpg_buf_len);
+            res = httpd_resp_send_chunk(req, part_buf, hlen);
         }
         if(res == ESP_OK){
             res = httpd_resp_send_chunk(req, (const char *)_jpg_buf, _jpg_buf_len);
@@ -115,31 +110,91 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
         if(res != ESP_OK){
             break;
         }
+
         int64_t fr_end = esp_timer_get_time();
         int64_t frame_time = fr_end - last_frame;
         last_frame = fr_end;
         frame_time /= 1000;
-        // ESP_LOGI(TAG, "MJPG: %uKB %ums (%.1ffps)",(uint32_t)(_jpg_buf_len/1024),(uint32_t)frame_time, 1000.0 / (uint32_t)frame_time);
-
     }
 
     last_frame = 0;
     return res;
 }
 
+// Button handler to toggle GPIO 2
+esp_err_t gpio_toggle_handler(httpd_req_t *req) {
+    static bool gpio_state = false;
+    gpio_state = !gpio_state;
+    gpio_set_level(GPIO_NUM_2, gpio_state ? 1 : 0);
+    const char* resp = gpio_state ? "GPIO 2 ON" : "GPIO 2 OFF";
+    httpd_resp_send(req, resp, strlen(resp));
+    return ESP_OK;
+}
+
+// HTML content with streaming and GPIO toggle
+const char* html_content = R"rawliteral(
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ESP32-CAM Control</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        img { border: 1px solid black; }
+        button { margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>ESP32-CAM</h1>
+    <img src="/stream" width="640" height="480" />
+    <br>
+    <button onclick="toggleGPIO()">Toggle GPIO 2</button>
+    <script>
+        function toggleGPIO() {
+            fetch('/toggle_gpio')
+                .then(response => response.text())
+                .then(text => alert(text));
+        }
+    </script>
+</body>
+</html>
+)rawliteral";
+
+esp_err_t root_get_handler(httpd_req_t *req) {
+    httpd_resp_set_type(req, "text/html");
+    return httpd_resp_send(req, html_content, strlen(html_content));
+}
+
 httpd_uri_t uri_get = {
-    .uri = "/",
+    .uri = "/stream",
     .method = HTTP_GET,
     .handler = jpg_stream_httpd_handler,
-    .user_ctx = NULL};
+    .user_ctx = NULL
+};
+
+httpd_uri_t uri_gpio = {
+    .uri = "/toggle_gpio",
+    .method = HTTP_GET,
+    .handler = gpio_toggle_handler,
+    .user_ctx = NULL
+};
+
+httpd_uri_t uri_root = {
+    .uri = "/",
+    .method = HTTP_GET,
+    .handler = root_get_handler,
+    .user_ctx = NULL
+};
+
 httpd_handle_t setup_server(void)
 {
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-    httpd_handle_t stream_httpd  = NULL;
+    httpd_handle_t stream_httpd = NULL;
 
-    if (httpd_start(&stream_httpd , &config) == ESP_OK)
+    if (httpd_start(&stream_httpd, &config) == ESP_OK)
     {
-        httpd_register_uri_handler(stream_httpd , &uri_get);
+        httpd_register_uri_handler(stream_httpd, &uri_get);
+        httpd_register_uri_handler(stream_httpd, &uri_gpio);
+        httpd_register_uri_handler(stream_httpd, &uri_root);
     }
 
     return stream_httpd;
@@ -161,6 +216,16 @@ void app_main()
 
     if (wifi_connect_status)
     {
+        // Initialize GPIO 2 as output
+        gpio_config_t io_conf = {
+            .intr_type = GPIO_INTR_DISABLE,
+            .mode = GPIO_MODE_OUTPUT,
+            .pin_bit_mask = (1ULL << GPIO_NUM_2),
+            .pull_down_en = GPIO_PULLDOWN_DISABLE,
+            .pull_up_en = GPIO_PULLUP_DISABLE
+        };
+        gpio_config(&io_conf);
+
         err = init_camera();
         if (err != ESP_OK)
         {
@@ -171,5 +236,7 @@ void app_main()
         ESP_LOGI(TAG, "ESP32 CAM Web Server is up and running\n");
     }
     else
-        ESP_LOGI(TAG, "Failed to connected with Wi-Fi, check your network Credentials\n");
+    {
+        ESP_LOGI(TAG, "Failed to connect to Wi-Fi, check your network Credentials\n");
+    }
 }
