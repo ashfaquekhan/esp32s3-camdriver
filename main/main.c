@@ -18,6 +18,8 @@ static const char* _STREAM_PART = "Content-Type: image/jpeg\r\nContent-Length: %
 
 #define CONFIG_XCLK_FREQ 20000000 
 
+int selected_camera = 1;  // Global variable to keep track of the selected camera
+
 // Function to initialize the first camera
 static esp_err_t init_camera_1(void)
 {
@@ -41,7 +43,7 @@ static esp_err_t init_camera_1(void)
         .pin_href = CAM_PIN_HREF,
         .pin_pclk = CAM_PIN_PCLK,
         .xclk_freq_hz = CONFIG_XCLK_FREQ,
-        .frame_size = FRAMESIZE_QVGA,
+        .frame_size = FRAMESIZE_96X96,
         .pixel_format = PIXFORMAT_JPEG,
         .fb_location = CAMERA_FB_IN_DRAM,
         .jpeg_quality = 20,
@@ -80,7 +82,7 @@ static esp_err_t init_camera_2(void)
         .pin_href = CAM_PIN_HREF_2,
         .pin_pclk = CAM_PIN_PCLK_2,
         .xclk_freq_hz = CONFIG_XCLK_FREQ,
-        .frame_size = FRAMESIZE_QVGA,
+        .frame_size = FRAMESIZE_96X96,
         .pixel_format = PIXFORMAT_JPEG,
         .fb_location = CAMERA_FB_IN_DRAM,
         .jpeg_quality = 20,
@@ -94,6 +96,12 @@ static esp_err_t init_camera_2(void)
         return err;
     }
     return ESP_OK;
+}
+
+// Function to deinitialize the camera
+static void deinit_camera()
+{
+    esp_camera_deinit();
 }
 
 esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
@@ -113,10 +121,19 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
     }
 
     while(true){
-        // Capture frame from the first camera
+        if (selected_camera == 1) {
+            // Initialize the first camera
+            deinit_camera();
+            init_camera_1();
+        } else {
+            // Initialize the second camera
+            deinit_camera();
+            init_camera_2();
+        }
+
         fb = esp_camera_fb_get();
         if (!fb) {
-            ESP_LOGE(TAG, "Camera 1 capture failed");
+            ESP_LOGE(TAG, "Camera %d capture failed", selected_camera);
             res = ESP_FAIL;
             break;
         }
@@ -150,51 +167,6 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
         if(res != ESP_OK){
             break;
         }
-
-        // Switch to the second camera and capture its frame
-        esp_camera_deinit();
-        init_camera_2();
-
-        fb = esp_camera_fb_get();
-        if (!fb) {
-            ESP_LOGE(TAG, "Camera 2 capture failed");
-            res = ESP_FAIL;
-            break;
-        }
-        if(fb->format != PIXFORMAT_JPEG){
-            bool jpeg_converted = frame2jpg(fb, 80, &_jpg_buf, &_jpg_buf_len);
-            if(!jpeg_converted){
-                ESP_LOGE(TAG, "JPEG compression failed");
-                esp_camera_fb_return(fb);
-                res = ESP_FAIL;
-            }
-        } else {
-            _jpg_buf_len = fb->len;
-            _jpg_buf = fb->buf;
-        }
-
-        if(res == ESP_OK){
-            res = httpd_resp_send_chunk(req, _STREAM_BOUNDARY, strlen(_STREAM_BOUNDARY));
-        }
-        if(res == ESP_OK){
-            size_t hlen = snprintf((char *)part_buf, 64, _STREAM_PART, _jpg_buf_len);
-
-            res = httpd_resp_send_chunk(req, (const char *)part_buf, hlen);
-        }
-        if(res == ESP_OK){
-            res = httpd_resp_send_chunk(req, (const char *)_jpg_buf, _jpg_buf_len);
-        }
-        if(fb->format != PIXFORMAT_JPEG){
-            free(_jpg_buf);
-        }
-        esp_camera_fb_return(fb);
-        if(res != ESP_OK){
-            break;
-        }
-
-        // Re-initialize the first camera
-        esp_camera_deinit();
-        init_camera_1();
 
         int64_t fr_end = esp_timer_get_time();
         int64_t frame_time = fr_end - last_frame;
@@ -206,10 +178,69 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
     return res;
 }
 
+// Handler for switching cameras
+esp_err_t camera_switch_handler(httpd_req_t *req)
+{
+    char buf[32];
+    int ret = httpd_req_get_url_query_str(req, buf, sizeof(buf));
+    if (ret == ESP_OK)
+    {
+        char param[32];
+        if (httpd_query_key_value(buf, "camera", param, sizeof(param)) == ESP_OK)
+        {
+            selected_camera = atoi(param);  // Set the selected camera
+        }
+    }
+
+    // Redirect to the stream page
+    httpd_resp_set_status(req, "302 Found");
+    httpd_resp_set_hdr(req, "Location", "/");
+    httpd_resp_send(req, NULL, 0);
+    return ESP_OK;
+}
+
+// Handler for the root URL
+esp_err_t index_html_handler(httpd_req_t *req)
+{
+    const char* response = 
+    "<html>"
+    "<body>"
+        "<h1>ESP32-CAM Web Server</h1>"
+        "<button onclick=\"switchCamera(1)\">Camera 1</button>"
+        "<button onclick=\"switchCamera(2)\">Camera 2</button>"
+        "<img src=\"/stream\" id=\"stream\" style=\"width: 320px; height: 240px;\"/>"
+        "<script>"
+            "function switchCamera(camera) {"
+                "window.location.href = `/camera_switch?camera=${camera}`;"
+            "}"
+        "</script>"
+    "</body>"
+    "</html>";
+
+    httpd_resp_set_type(req, "text/html");
+    httpd_resp_send(req, response, strlen(response));
+    return ESP_OK;
+}
+
+
 httpd_uri_t uri_get = {
-    .uri = "/",
+    .uri = "/stream",
     .method = HTTP_GET,
     .handler = jpg_stream_httpd_handler,
+    .user_ctx = NULL
+};
+
+httpd_uri_t uri_camera_switch = {
+    .uri = "/camera_switch",
+    .method = HTTP_GET,
+    .handler = camera_switch_handler,
+    .user_ctx = NULL
+};
+
+httpd_uri_t uri_index_html = {
+    .uri = "/",
+    .method = HTTP_GET,
+    .handler = index_html_handler,
     .user_ctx = NULL
 };
 
@@ -220,7 +251,9 @@ httpd_handle_t setup_server(void)
 
     if (httpd_start(&stream_httpd, &config) == ESP_OK)
     {
+        httpd_register_uri_handler(stream_httpd, &uri_index_html);
         httpd_register_uri_handler(stream_httpd, &uri_get);
+        httpd_register_uri_handler(stream_httpd, &uri_camera_switch);
     }
 
     return stream_httpd;
