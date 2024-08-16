@@ -1,187 +1,134 @@
-#include "esp_camera.h"
-#include <WiFi.h>
-#include "esp_http_server.h"
+#include "CameraWrapper.h"
 
-// Replace with your network credentials
-const char* ssid = "K.G.F-Extension";
-const char* password = "ashfaque92786";
+#define CAM_PIN_PWDN    -1
+#define CAM_PIN_RESET   -1
+#define CAM_PIN_XCLK    4
+#define CAM_PIN_SIOD    9
+#define CAM_PIN_SIOC    10
 
-// Camera pin configuration
-#define PWDN_GPIO_NUM  -1
-#define RESET_GPIO_NUM -1
-#define XCLK_GPIO_NUM  10
-#define SIOD_GPIO_NUM  40
-#define SIOC_GPIO_NUM  39
+#define CAM_PIN_D7      18
+#define CAM_PIN_D6      17
+#define CAM_PIN_D5      16
+#define CAM_PIN_D4      15
+#define CAM_PIN_D3      14
+#define CAM_PIN_D2      13
+#define CAM_PIN_D1      12
+#define CAM_PIN_D0      11
+#define CAM_PIN_VSYNC   5
+#define CAM_PIN_HREF    6
+#define CAM_PIN_PCLK    7
 
-#define Y9_GPIO_NUM    48
-#define Y8_GPIO_NUM    11
-#define Y7_GPIO_NUM    12
-#define Y6_GPIO_NUM    14
-#define Y5_GPIO_NUM    16
-#define Y4_GPIO_NUM    18
-#define Y3_GPIO_NUM    17
-#define Y2_GPIO_NUM    15
-#define VSYNC_GPIO_NUM 38
-#define HREF_GPIO_NUM  47
-#define PCLK_GPIO_NUM  13
+#define CAM_PIN_PWDN_2  -1
+#define CAM_PIN_RESET_2 -1
+#define CAM_PIN_XCLK_2  47
+#define CAM_PIN_SIOD_2  19
+#define CAM_PIN_SIOC_2  20
 
-#define PART_BOUNDARY "123456789000000000000987654321"
+#define CAM_PIN_D7_2    42
+#define CAM_PIN_D6_2    41
+#define CAM_PIN_D5_2    40
+#define CAM_PIN_D4_2    39
+#define CAM_PIN_D3_2    38
+#define CAM_PIN_D2_2    37
+#define CAM_PIN_D1_2    36
+#define CAM_PIN_D0_2    35
+#define CAM_PIN_VSYNC_2 26
+#define CAM_PIN_HREF_2  33
+#define CAM_PIN_PCLK_2  48
 
-static const char* _STREAM_CONTENT_TYPE = "multipart/x-mixed-replace;boundary=" PART_BOUNDARY;
-static const char* _STREAM_BOUNDARY = "\r\n--" PART_BOUNDARY "\r\n";
-static const char* _STREAM_PART = "Content-Type: image/jpeg\r\nContent-Length: %u\r\n\r\n";
+camera_config_t camera_config1 = {
+    .pin_pwdn       = CAM_PIN_PWDN,
+    .pin_reset      = CAM_PIN_RESET,
+    .pin_xclk       = CAM_PIN_XCLK,
+    .pin_sccb_sda   = CAM_PIN_SIOD,
+    .pin_sccb_scl   = CAM_PIN_SIOC,
+    .pin_d7         = CAM_PIN_D7,
+    .pin_d6         = CAM_PIN_D6,
+    .pin_d5         = CAM_PIN_D5,
+    .pin_d4         = CAM_PIN_D4,
+    .pin_d3         = CAM_PIN_D3,
+    .pin_d2         = CAM_PIN_D2,
+    .pin_d1         = CAM_PIN_D1,
+    .pin_d0         = CAM_PIN_D0,
+    .pin_vsync      = CAM_PIN_VSYNC,
+    .pin_href       = CAM_PIN_HREF,
+    .pin_pclk       = CAM_PIN_PCLK,
+    .xclk_freq_hz   = 20000000,
+    .ledc_timer     = LEDC_TIMER_0,
+    .ledc_channel   = LEDC_CHANNEL_0,
+    .pixel_format   = PIXFORMAT_JPEG,
+    .frame_size     = FRAMESIZE_SVGA,
+    .jpeg_quality   = 20,
+    .fb_count       = 1,
+    .fb_location    = CAMERA_FB_IN_DRAM,
+    .grab_mode      = CAMERA_GRAB_WHEN_EMPTY
+};
 
-// Struct for JPEG chunking
-typedef struct {
-    httpd_req_t *req;
-    size_t len;
-} jpg_chunking_t;
+//camera_config_t camera_config2 = {
+//    .pin_pwdn       = CAM_PIN_PWDN_2,
+//    .pin_reset      = CAM_PIN_RESET_2,
+//    .pin_xclk       = CAM_PIN_XCLK_2,
+//    .pin_sccb_sda   = CAM_PIN_SIOD_2,
+//    .pin_sccb_scl   = CAM_PIN_SIOC_2,
+//    .pin_d7         = CAM_PIN_D7_2,
+//    .pin_d6         = CAM_PIN_D6_2,
+//    .pin_d5         = CAM_PIN_D5_2,
+//    .pin_d4         = CAM_PIN_D4_2,
+//    .pin_d3         = CAM_PIN_D3_2,
+//    .pin_d2         = CAM_PIN_D2_2,
+//    .pin_d1         = CAM_PIN_D1_2,
+//    .pin_d0         = CAM_PIN_D0_2,
+//    .pin_vsync      = CAM_PIN_VSYNC_2,
+//    .pin_href       = CAM_PIN_HREF_2,
+//    .pin_pclk       = CAM_PIN_PCLK_2,
+//    .xclk_freq_hz   = 20000000,
+//    .ledc_timer     = LEDC_TIMER_1,
+//    .ledc_channel   = LEDC_CHANNEL_1,
+//    .pixel_format   = PIXFORMAT_JPEG,
+//    .frame_size     = FRAMESIZE_SVGA,
+//    .jpeg_quality   = 20,
+//    .fb_count       = 1,
+//    .grab_mode      = CAMERA_GRAB_WHEN_EMPTY
+//};
 
-httpd_handle_t stream_httpd = NULL;
-
-static size_t jpg_encode_stream(void *arg, size_t index, const void *data, size_t len) {
-    jpg_chunking_t *j = (jpg_chunking_t *)arg;
-    if (index == 0) {
-        j->len = 0;
-    }
-    if (httpd_resp_send_chunk(j->req, (const char *)data, len) != ESP_OK) {
-        return 0;
-    }
-    j->len += len;
-    return len;
-}
-
-static esp_err_t stream_handler(httpd_req_t *req) {
-    camera_fb_t *fb = NULL;
-    esp_err_t res = ESP_OK;
-    size_t _jpg_buf_len = 0;
-    uint8_t *_jpg_buf = NULL;
-    char *part_buf[64];
-
-    res = httpd_resp_set_type(req, _STREAM_CONTENT_TYPE);
-    if (res != ESP_OK) {
-        return res;
-    }
-
-    while (true) {
-        fb = esp_camera_fb_get();
-        if (!fb) {
-            Serial.println("Camera capture failed");
-            res = ESP_FAIL;
-        } else {
-            if (fb->format != PIXFORMAT_JPEG) {
-                bool jpeg_converted = frame2jpg(fb, 80, &_jpg_buf, &_jpg_buf_len);
-                esp_camera_fb_return(fb);
-                fb = NULL;
-                if (!jpeg_converted) {
-                    Serial.println("JPEG compression failed");
-                    res = ESP_FAIL;
-                }
-            } else {
-                _jpg_buf_len = fb->len;
-                _jpg_buf = fb->buf;
-            }
-        }
-
-        if (res == ESP_OK) {
-            size_t hlen = snprintf((char *)part_buf, 64, _STREAM_PART, _jpg_buf_len);
-            res = httpd_resp_send_chunk(req, (const char *)part_buf, hlen);
-        }
-
-        if (res == ESP_OK) {
-            res = httpd_resp_send_chunk(req, (const char *)_jpg_buf, _jpg_buf_len);
-        }
-
-        if (res == ESP_OK) {
-            res = httpd_resp_send_chunk(req, _STREAM_BOUNDARY, strlen(_STREAM_BOUNDARY));
-        }
-
-        if (fb) {
-            esp_camera_fb_return(fb);
-            fb = NULL;
-            _jpg_buf = NULL;
-        } else if (_jpg_buf) {
-            free(_jpg_buf);
-            _jpg_buf = NULL;
-        }
-
-        if (res != ESP_OK) {
-            break;
-        }
-    }
-
-    return res;
-}
-
-void startCameraServer() {
-    httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-    config.server_port = 80;
-
-    httpd_uri_t stream_uri = {
-        .uri       = "/",
-        .method    = HTTP_GET,
-        .handler   = stream_handler,
-        .user_ctx  = NULL
-    };
-
-    if (httpd_start(&stream_httpd, &config) == ESP_OK) {
-        httpd_register_uri_handler(stream_httpd, &stream_uri);
-    }
-}
+Camera cam1(camera_config1);
+//Camera cam2(camera_config2);
 
 void setup() {
     Serial.begin(115200);
-    Serial.setDebugOutput(false);
 
-    // Camera configuration
-    camera_config_t config;
-    config.ledc_channel = LEDC_CHANNEL_0;
-    config.ledc_timer = LEDC_TIMER_0;
-    config.pin_d0 = Y2_GPIO_NUM;
-    config.pin_d1 = Y3_GPIO_NUM;
-    config.pin_d2 = Y4_GPIO_NUM;
-    config.pin_d3 = Y5_GPIO_NUM;
-    config.pin_d4 = Y6_GPIO_NUM;
-    config.pin_d5 = Y7_GPIO_NUM;
-    config.pin_d6 = Y8_GPIO_NUM;
-    config.pin_d7 = Y9_GPIO_NUM;
-    config.pin_xclk = XCLK_GPIO_NUM;
-    config.pin_pclk = PCLK_GPIO_NUM;
-    config.pin_vsync = VSYNC_GPIO_NUM;
-    config.pin_href = HREF_GPIO_NUM;
-    config.pin_sscb_sda = SIOD_GPIO_NUM;
-    config.pin_sscb_scl = SIOC_GPIO_NUM;
-    config.pin_pwdn = PWDN_GPIO_NUM;
-    config.pin_reset = RESET_GPIO_NUM;
-    config.xclk_freq_hz = 20000000;
-    config.pixel_format = PIXFORMAT_JPEG;
-    config.frame_size = FRAMESIZE_QVGA; // Can adjust as needed
-    config.jpeg_quality = 20;
-    config.fb_count = 2;
-
-    // Initialize the camera
-    esp_err_t err = esp_camera_init(&config);
-    if (err != ESP_OK) {
-        Serial.printf("Camera init failed with error 0x%x", err);
+    if (cam1.init() != ESP_OK) {
+        Serial.println("Failed to initialize camera 1");
         return;
+    } else {
+        Serial.println("Camera 1 initialized successfully");
     }
-
-    // Connect to Wi-Fi
-    WiFi.begin(ssid, password);
-    while (WiFi.status() != WL_CONNECTED) {
-        delay(500);
-        Serial.print(".");
-    }
-    Serial.println("");
-    Serial.println("WiFi connected");
-
-    Serial.print("Camera Stream Ready! Go to: http://");
-    Serial.println(WiFi.localIP());
-
-    // Start the camera server
-    startCameraServer();
+//
+//    if (cam2.init() != ESP_OK) {
+//        Serial.println("Failed to initialize camera 2");
+//        return;
+//    } else {
+//        Serial.println("Camera 2 initialized successfully");
+//    }
 }
 
 void loop() {
-    delay(1);
+    camera_fb_t* fb1 = cam1.capture();
+//    camera_fb_t* fb2 = cam2.capture();
+
+    if (fb1) {
+        Serial.println("Captured a frame from camera 1");
+        cam1.returnFrame(fb1);
+    } else {
+        Serial.println("Failed to capture a frame from camera 1");
+    }
+
+//    if (fb2) {
+//        Serial.println("Captured a frame from camera 2");
+//        cam2.returnFrame(fb2);
+//    } else {
+//        Serial.println("Failed to capture a frame from camera 2");
+//    }
+
+    delay(1000);  // Delay between captures
 }

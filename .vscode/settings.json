@@ -24,6 +24,7 @@
         "esp_log.h": "c",
         "*.inc": "c",
         "ledc.h": "c",
-        "sdkconfig.h": "c"
+        "sdkconfig.h": "c",
+        "string": "cpp"
     }
 }
