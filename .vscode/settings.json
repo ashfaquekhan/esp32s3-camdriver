@@ -22,6 +22,8 @@
         "api.h": "c",
         "esp_netif.h": "c",
         "esp_log.h": "c",
-        "*.inc": "c"
+        "*.inc": "c",
+        "ledc.h": "c",
+        "sdkconfig.h": "c"
     }
 }
