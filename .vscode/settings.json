@@ -12,7 +12,7 @@
         "interface/ftdi/esp32_devkitj_v1.cfg",
         "target/esp32s3.cfg"
     ],
-    "idf.portWin": "COM14",
+    "idf.portWin": "COM17",
     "idf.pythonBinPathWin": "C:\\Users\\ashfa\\.espressif\\python_env\\idf5.0_py3.11_env\\Scripts\\python.exe",
     "idf.toolsPathWin": "C:\\Users\\ashfa\\.espressif",
     "idf.flashType": "UART",
@@ -25,6 +25,7 @@
         "*.inc": "c",
         "ledc.h": "c",
         "sdkconfig.h": "c",
-        "string": "cpp"
+        "string": "cpp",
+        "type_traits": "c"
     }
 }
