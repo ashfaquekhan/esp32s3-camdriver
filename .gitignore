@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 build/.ninja_log
 build/build.ninja
 build/compile_commands.json
@@ -25,3 +26,6 @@ build/esp-idf/main/libmain.a
 build/esp-idf/main/CMakeFiles/__idf_main.dir/main.c.obj
 build/log/idf_py_stderr_output_6316
 build/log/idf_py_stdout_output_6316
+=======
+build/
+>>>>>>> parent of e19579c (rolling to single cam code)

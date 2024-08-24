@@ -1,7 +1,11 @@
 {
     "version":            "1",
     "project_name":       "project-name",
+<<<<<<< HEAD
     "project_version":    "35d0f6a-dirty",
+=======
+    "project_version":    "54b4921-dirty",
+>>>>>>> parent of e19579c (rolling to single cam code)
     "project_path":       "D:/project-name",
     "idf_path":           "C:/Users/ashfa/esp/v5.0.6/esp-idf",
     "build_dir":          "D:/project-name/build",
