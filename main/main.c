@@ -19,6 +19,7 @@ void swap()
     state=!state;
     gpio_set_level(PIN1, state);
     gpio_set_level(PIN2, !state);
+    // vTaskDelay(1 / portTICK_PERIOD_MS);
 }
 
 static const char *TAG = "esp32-cam Webserver";
@@ -53,12 +54,12 @@ static esp_err_t init_camera(void)
         .pin_href = CAM_PIN_HREF,
         .pin_pclk = CAM_PIN_PCLK,
         .xclk_freq_hz = CONFIG_XCLK_FREQ,
-        .frame_size = FRAMESIZE_CIF,
+        .frame_size = FRAMESIZE_HVGA,
         .pixel_format = PIXFORMAT_JPEG,
         .fb_location = CAMERA_FB_IN_DRAM,
-        .jpeg_quality = 30,
+        .jpeg_quality =20,
         .fb_count = 1,
-        .grab_mode = CAMERA_GRAB_LATEST
+        .grab_mode = CAMERA_GRAB_WHEN_EMPTY
     };
 
     esp_err_t err = esp_camera_init(&camera_config);
@@ -90,7 +91,8 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
     while(true){
         
         fb = esp_camera_fb_get();
-        swap();
+
+        
         if (!fb) {
             ESP_LOGE(TAG, "Camera capture failed");
             res = ESP_FAIL;
@@ -103,7 +105,10 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
                 esp_camera_fb_return(fb);
                 res = ESP_FAIL;
             }
-        } else {
+        } 
+        else 
+        {    
+            swap();
             _jpg_buf_len = fb->len;
             _jpg_buf = fb->buf;
         }
@@ -122,6 +127,7 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
             free(_jpg_buf);
         }
         esp_camera_fb_return(fb);
+        
         if(res != ESP_OK){
             break;
         }
@@ -130,6 +136,7 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
         int64_t frame_time = fr_end - last_frame;
         last_frame = fr_end;
         frame_time /= 1000;
+
         
     }
 
