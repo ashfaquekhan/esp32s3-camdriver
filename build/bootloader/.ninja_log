@@ -181,6 +181,7 @@
 10	142	0	D:/project-name/build/bootloader/esp-idf/esptool_py/CMakeFiles/bootloader_check_size	9223de7a4705b236
 8	142	0	esp-idf/esptool_py/CMakeFiles/bootloader_check_size	9223de7a4705b236
 8	142	0	D:/project-name/build/bootloader/esp-idf/esptool_py/CMakeFiles/bootloader_check_size	9223de7a4705b236
+<<<<<<< HEAD
 9	169	0	esp-idf/esptool_py/CMakeFiles/bootloader_check_size	9223de7a4705b236
 9	169	0	D:/project-name/build/bootloader/esp-idf/esptool_py/CMakeFiles/bootloader_check_size	9223de7a4705b236
 20	1208	0	esp-idf/esptool_py/CMakeFiles/bootloader_check_size	9223de7a4705b236
@@ -197,3 +198,5 @@
 7	131	0	D:/project-name/build/bootloader/esp-idf/esptool_py/CMakeFiles/bootloader_check_size	9223de7a4705b236
 10	182	0	esp-idf/esptool_py/CMakeFiles/bootloader_check_size	9223de7a4705b236
 10	182	0	D:/project-name/build/bootloader/esp-idf/esptool_py/CMakeFiles/bootloader_check_size	9223de7a4705b236
+=======
+>>>>>>> parent of 4111611 (DVP-MUX working)

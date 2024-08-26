@@ -1,14 +1,26 @@
 # ninja log v5
+<<<<<<< HEAD
 4953	5697	7463959900062720	esp-idf/esp_system/CMakeFiles/__idf_esp_system.dir/port/soc/esp32s3/cache_err_int.c.obj	1d314bda890372af
 152	863	7463959851292825	esp-idf/spi_flash/CMakeFiles/__idf_spi_flash.dir/spi_flash_hpm_enable.c.obj	e2a05a3e2ff11354
 1748	2794	7463959870722325	esp-idf/spi_flash/CMakeFiles/__idf_spi_flash.dir/flash_ops.c.obj	d8c6d380de8589d7
 29588	31024	7463960152823280	esp-idf/esp_hw_support/CMakeFiles/__idf_esp_hw_support.dir/gdma.c.obj	1df701ff1c420fd9
 195	606	7463959849727562	esp-idf/spi_flash/CMakeFiles/__idf_spi_flash.dir/spi_flash_chip_issi.c.obj	186f812ed11eac1e
 241	1221	7463959855703474	esp-idf/esp_partition/CMakeFiles/__idf_esp_partition.dir/partition_target.c.obj	4348e12af01d6729
+=======
+1748	2794	7463959870722325	esp-idf/spi_flash/CMakeFiles/__idf_spi_flash.dir/flash_ops.c.obj	d8c6d380de8589d7
+29588	31024	7463960152823280	esp-idf/esp_hw_support/CMakeFiles/__idf_esp_hw_support.dir/gdma.c.obj	1df701ff1c420fd9
+152	863	7463959851292825	esp-idf/spi_flash/CMakeFiles/__idf_spi_flash.dir/spi_flash_hpm_enable.c.obj	e2a05a3e2ff11354
+4953	5697	7463959900062720	esp-idf/esp_system/CMakeFiles/__idf_esp_system.dir/port/soc/esp32s3/cache_err_int.c.obj	1d314bda890372af
+>>>>>>> parent of 4111611 (DVP-MUX working)
 32565	34262	7463960185010480	esp-idf/freertos/CMakeFiles/__idf_freertos.dir/FreeRTOS-Kernel/tasks.c.obj	f2621aeefe31dc9c
 823	1552	7463959858448954	esp-idf/spi_flash/CMakeFiles/__idf_spi_flash.dir/spi_flash_timing_tuning.c.obj	dcba28a07d571995
 23882	24525	7463960088706686	esp-idf/hal/CMakeFiles/__idf_hal.dir/lcd_hal.c.obj	bbaad8ea46710163
 27800	28378	7463960125549010	esp-idf/soc/CMakeFiles/__idf_soc.dir/esp32s3/usb_periph.c.obj	70d001972e78fe02
+<<<<<<< HEAD
+=======
+241	1221	7463959855703474	esp-idf/esp_partition/CMakeFiles/__idf_esp_partition.dir/partition_target.c.obj	4348e12af01d6729
+195	606	7463959849727562	esp-idf/spi_flash/CMakeFiles/__idf_spi_flash.dir/spi_flash_chip_issi.c.obj	186f812ed11eac1e
+>>>>>>> parent of 4111611 (DVP-MUX working)
 40567	44488	7463960286415477	esp-idf/nvs_flash/CMakeFiles/__idf_nvs_flash.dir/src/nvs_handle_simple.cpp.obj	25dde048c788b1b5
 114015	114691	7463960988705202	esp-idf/espressif__tinyusb/CMakeFiles/__idf_espressif__tinyusb.dir/src/class/hid/hid_device.c.obj	348b3da87d41a678
 47	143	7463959845231268	D:/project-name/build/esp-idf/esp_system/ld/memory.ld	d85e4fd536f2228e
@@ -28,7 +40,11 @@
 18842	19928	7463960042292528	esp-idf/mbedtls/mbedtls/library/CMakeFiles/mbedtls.dir/ssl_tls12_client.c.obj	f0e617b583ab0d5b
 31089	32091	7463960164184777	esp-idf/esp_hw_support/CMakeFiles/__idf_esp_hw_support.dir/port/esp32s3/sar_periph_ctrl.c.obj	db5c3229cf36fa1c
 41301	42017	7463960263651133	esp-idf/esp_phy/CMakeFiles/__idf_esp_phy.dir/src/phy_override.c.obj	5ae891427304b5a
+<<<<<<< HEAD
 47	272	7463960588231955	bootloader/bootloader.bin	ccf89bf6fabb6ce6
+=======
+45	292	7463960588231955	bootloader/bootloader.bin	ccf89bf6fabb6ce6
+>>>>>>> parent of 4111611 (DVP-MUX working)
 24	104	7463959844756720	D:/project-name/build/project_elf_src_esp32s3.c	3cbd7ce0e06f4fd1
 874	1623	7463959859684132	esp-idf/spi_flash/CMakeFiles/__idf_spi_flash.dir/esp32s3/spi_timing_config.c.obj	614fe75de585e741
 4366	5139	7463959894245940	D:/project-name/build/bootloader-prefix/src/bootloader-stamp/bootloader-patch	3bde590dca5256e6
@@ -38,7 +54,11 @@
 162	760	7463959850132874	esp-idf/spi_flash/CMakeFiles/__idf_spi_flash.dir/spi_flash_chip_gd.c.obj	4965a79e05d8aec0
 67964	68835	7463960530699192	esp-idf/esp-tls/CMakeFiles/__idf_esp-tls.dir/esp-tls-crypto/esp_tls_crypto.c.obj	ad175037245f0390
 3774	4560	7463959888805261	esp-idf/esp_system/CMakeFiles/__idf_esp_system.dir/ubsan.c.obj	6f5b2d842dbdc5a5
+<<<<<<< HEAD
 8883	9290	7464045535181082	D:/project-name/build/.bin_timestamp	c5b2ff134f186fd4
+=======
+9060	9555	7464026842340896	D:/project-name/build/.bin_timestamp	c5b2ff134f186fd4
+>>>>>>> parent of 4111611 (DVP-MUX working)
 85031	85139	7463960695196645	bootloader-prefix/src/bootloader-stamp/bootloader-install	7b19a4fd0e60c4b1
 3681	4348	7463959885190061	D:/project-name/build/bootloader-prefix/src/bootloader-stamp/bootloader-update	aba8a8374fd0915b
 181	808	7463959850892824	esp-idf/spi_flash/CMakeFiles/__idf_spi_flash.dir/spi_flash_chip_mxic.c.obj	ecbbd5d00c701236
@@ -117,7 +137,11 @@
 4007	4964	7463959892245983	esp-idf/esp_system/CMakeFiles/__idf_esp_system.dir/task_wdt/task_wdt_impl_timergroup.c.obj	7fdaa067eee4f527
 2997	3773	7463959881379354	esp-idf/esp_system/CMakeFiles/__idf_esp_system.dir/crosscore_int.c.obj	4af6350ad9bd6c93
 28825	29721	7463960139511618	esp-idf/esp_hw_support/CMakeFiles/__idf_esp_hw_support.dir/sleep_gpio.c.obj	dd02e7e36a8360aa
+<<<<<<< HEAD
 47	272	7463960588231955	D:/project-name/build/bootloader/bootloader.map	ccf89bf6fabb6ce6
+=======
+45	292	7463960588231955	D:/project-name/build/bootloader/bootloader.map	ccf89bf6fabb6ce6
+>>>>>>> parent of 4111611 (DVP-MUX working)
 57664	58885	7463960430487611	esp-idf/wpa_supplicant/CMakeFiles/__idf_wpa_supplicant.dir/src/crypto/dh_group5.c.obj	1425c0eed7a19b2f
 3623	4852	7463959891650700	esp-idf/esp_system/CMakeFiles/__idf_esp_system.dir/startup.c.obj	9981a7bfcc3857f7
 22473	23033	7463960073629172	esp-idf/hal/CMakeFiles/__idf_hal.dir/uart_hal_iram.c.obj	c4ca48b607b3ff57
@@ -181,7 +205,11 @@
 61552	62956	7463960470842818	esp-idf/wpa_supplicant/CMakeFiles/__idf_wpa_supplicant.dir/src/rsn_supp/wpa_ie.c.obj	94df4671df9025ac
 6138	6658	7463959909139822	esp-idf/esp_rom/CMakeFiles/__idf_esp_rom.dir/patches/esp_rom_crc.c.obj	8c014d2c4bb841ce
 44352	45753	7463960301133010	esp-idf/lwip/CMakeFiles/__idf_lwip.dir/lwip/src/apps/sntp/sntp.c.obj	3b8023e17ed3040a
+<<<<<<< HEAD
 9291	9409	0	esp-idf/esptool_py/CMakeFiles/app_check_size	ea4403c7eee2403c
+=======
+9556	9699	0	esp-idf/esptool_py/CMakeFiles/app_check_size	ea4403c7eee2403c
+>>>>>>> parent of 4111611 (DVP-MUX working)
 5725	6770	7463959909079836	esp-idf/esp_system/CMakeFiles/__idf_esp_system.dir/port/arch/xtensa/esp_ipc_isr.c.obj	2a1481ee105bada1
 6120	6783	7463959910659817	esp-idf/esp_system/CMakeFiles/__idf_esp_system.dir/port/arch/xtensa/esp_ipc_isr_handler.S.obj	8d1fadef30bb8e18
 46714	48235	7463960324184552	esp-idf/lwip/CMakeFiles/__idf_lwip.dir/lwip/src/core/tcp_out.c.obj	6be01046a57bc982
@@ -199,11 +227,19 @@
 6503	6967	7463959913057996	esp-idf/esp_rom/CMakeFiles/__idf_esp_rom.dir/patches/esp_rom_efuse.c.obj	a15b2b1afc0f1b8a
 6476	7061	7463959914090258	esp-idf/esp_rom/CMakeFiles/__idf_esp_rom.dir/patches/esp_rom_uart.c.obj	4dfd7ad754020a63
 6588	7121	7463959914753283	esp-idf/esp_rom/CMakeFiles/__idf_esp_rom.dir/patches/esp_rom_spiflash.c.obj	4ca2d86d0b4c2c40
+<<<<<<< HEAD
 9291	9409	0	D:/project-name/build/esp-idf/esptool_py/CMakeFiles/app_check_size	ea4403c7eee2403c
 6789	7225	7463959915704995	esp-idf/esp_rom/CMakeFiles/__idf_esp_rom.dir/patches/esp_rom_mmap.c.obj	63cd6b86899db260
 6771	7323	7463959916323545	esp-idf/esp_rom/CMakeFiles/__idf_esp_rom.dir/patches/esp_rom_cache_esp32s2_esp32s3.c.obj	53bb838527f33fc4
 118	1118	7464039917835843	esp-idf/espressif__esp32-camera/CMakeFiles/__idf_espressif__esp32-camera.dir/driver/cam_hal.c.obj	b14790de7e754249
 47	272	7463960588231955	D:/project-name/build/bootloader/bootloader.elf	ccf89bf6fabb6ce6
+=======
+9556	9699	0	D:/project-name/build/esp-idf/esptool_py/CMakeFiles/app_check_size	ea4403c7eee2403c
+6789	7225	7463959915704995	esp-idf/esp_rom/CMakeFiles/__idf_esp_rom.dir/patches/esp_rom_mmap.c.obj	63cd6b86899db260
+6771	7323	7463959916323545	esp-idf/esp_rom/CMakeFiles/__idf_esp_rom.dir/patches/esp_rom_cache_esp32s2_esp32s3.c.obj	53bb838527f33fc4
+401	2018	7464012728533855	esp-idf/espressif__esp32-camera/CMakeFiles/__idf_espressif__esp32-camera.dir/driver/cam_hal.c.obj	b14790de7e754249
+45	292	7463960588231955	D:/project-name/build/bootloader/bootloader.elf	ccf89bf6fabb6ce6
+>>>>>>> parent of 4111611 (DVP-MUX working)
 78232	79366	7463960635210204	esp-idf/esp_wifi/libesp_wifi.a	85bebe02212cfb5d
 35533	36441	7463960205662744	esp-idf/esp_timer/CMakeFiles/__idf_esp_timer.dir/src/ets_timer_legacy.c.obj	26c6b5a4e1515204
 6574	7351	7463959916380062	esp-idf/esp_rom/CMakeFiles/__idf_esp_rom.dir/patches/esp_rom_longjmp.S.obj	29dd6d77bcb5a78
@@ -298,7 +334,11 @@
 88205	89739	7463960740788069	esp-idf/driver/CMakeFiles/__idf_driver.dir/gpio/gpio.c.obj	1b0fd3e09d97fc02
 5140	74450	7463960588231955	D:/project-name/build/bootloader-prefix/src/bootloader-stamp/bootloader-configure	2cd23f2eb6ac2f13
 11107	12008	7463959962845985	esp-idf/mbedtls/mbedtls/library/CMakeFiles/mbedcrypto.dir/md.c.obj	c30efcb5f0bb2c4e
+<<<<<<< HEAD
 81	242	7464037903493750	esp-idf/esp_app_format/CMakeFiles/__idf_esp_app_format.dir/esp_app_desc.c.obj	f940e2558b6927f
+=======
+60	251	7464012713009941	esp-idf/esp_app_format/CMakeFiles/__idf_esp_app_format.dir/esp_app_desc.c.obj	4b7e7ca2af00b55c
+>>>>>>> parent of 4111611 (DVP-MUX working)
 11916	12764	7463959971231930	esp-idf/mbedtls/mbedtls/library/CMakeFiles/mbedcrypto.dir/oid.c.obj	14221b88eb9fdbde
 11600	12036	7463959963409123	esp-idf/mbedtls/mbedtls/library/CMakeFiles/mbedcrypto.dir/memory_buffer_alloc.c.obj	ff6c51366bcd1e31
 20739	21442	7463960057095836	esp-idf/bootloader_support/CMakeFiles/__idf_bootloader_support.dir/src/secure_boot.c.obj	5d7948d6b1062cb8
@@ -400,7 +440,11 @@
 110007	111332	7463960955358821	esp-idf/touch_element/libtouch_element.a	e915dedecdc920cd
 17705	18425	7463960027475161	esp-idf/mbedtls/mbedtls/library/CMakeFiles/mbedtls.dir/mps_trace.c.obj	5334239dbae51220
 17848	18611	7463960029584560	esp-idf/mbedtls/mbedtls/library/CMakeFiles/mbedtls.dir/ssl_client.c.obj	dddfedf607310e89
+<<<<<<< HEAD
 8883	9290	7464045535181082	.bin_timestamp	c5b2ff134f186fd4
+=======
+9060	9555	7464026842340896	.bin_timestamp	c5b2ff134f186fd4
+>>>>>>> parent of 4111611 (DVP-MUX working)
 17626	18626	7463960029425041	esp-idf/mbedtls/mbedtls/library/CMakeFiles/mbedtls.dir/ssl_ciphersuites.c.obj	68c8779602fe0089
 18002	18782	7463960031400860	esp-idf/bootloader_support/CMakeFiles/__idf_bootloader_support.dir/bootloader_flash/src/bootloader_flash_config_esp32s3.c.obj	7cce634116614d4d
 18032	18842	7463960031420882	esp-idf/bootloader_support/CMakeFiles/__idf_bootloader_support.dir/src/bootloader_efuse.c.obj	4afd1b9fef9b1cb7
@@ -416,11 +460,19 @@
 18782	19355	7463960037081796	esp-idf/mbedtls/mbedtls/library/CMakeFiles/mbedtls.dir/ssl_tls13_keys.c.obj	f72e33074a671784
 25363	26093	7463960103424799	esp-idf/log/CMakeFiles/__idf_log.dir/log_freertos.c.obj	78287f5bf2247a0e
 18516	19400	7463960036901791	esp-idf/mbedtls/mbedtls/library/CMakeFiles/mbedtls.dir/ssl_cookie.c.obj	53c516f21de7762d
+<<<<<<< HEAD
 47	272	7463960588231955	bootloader-prefix/src/bootloader-stamp/bootloader-build	ccf89bf6fabb6ce6
 18890	19581	7463960037877328	esp-idf/mbedtls/mbedtls/library/CMakeFiles/mbedtls.dir/ssl_tls13_server.c.obj	bee0749be8596bc2
 24474	25261	7463960094537376	esp-idf/hal/CMakeFiles/__idf_hal.dir/esp32s3/hmac_hal.c.obj	67453f76bf69aaee
 51932	52923	7463960371023073	esp-idf/lwip/CMakeFiles/__idf_lwip.dir/lwip/src/netif/ppp/ipv6cp.c.obj	75be875dbd67522c
 1328	2064	7464039927612880	esp-idf/espressif__esp32-camera/CMakeFiles/__idf_espressif__esp32-camera.dir/sensors/sc031gs.c.obj	73c02bb7867ef871
+=======
+45	292	7463960588231955	bootloader-prefix/src/bootloader-stamp/bootloader-build	ccf89bf6fabb6ce6
+18890	19581	7463960037877328	esp-idf/mbedtls/mbedtls/library/CMakeFiles/mbedtls.dir/ssl_tls13_server.c.obj	bee0749be8596bc2
+24474	25261	7463960094537376	esp-idf/hal/CMakeFiles/__idf_hal.dir/esp32s3/hmac_hal.c.obj	67453f76bf69aaee
+51932	52923	7463960371023073	esp-idf/lwip/CMakeFiles/__idf_lwip.dir/lwip/src/netif/ppp/ipv6cp.c.obj	75be875dbd67522c
+377	1637	7464012723557897	esp-idf/espressif__esp32-camera/CMakeFiles/__idf_espressif__esp32-camera.dir/sensors/sc031gs.c.obj	73c02bb7867ef871
+>>>>>>> parent of 4111611 (DVP-MUX working)
 36884	41503	7463960258476447	esp-idf/nvs_flash/CMakeFiles/__idf_nvs_flash.dir/src/nvs_page.cpp.obj	470c4ba46b1812dd
 18485	19677	7463960039997280	esp-idf/mbedtls/mbedtls/library/CMakeFiles/mbedtls.dir/ssl_msg.c.obj	80227b50c624448f
 19155	20121	7463960043047821	esp-idf/mbedtls/mbedtls/library/CMakeFiles/mbedtls.dir/C_/Users/ashfa/esp/v5.0.6/esp-idf/components/mbedtls/port/mbedtls_debug.c.obj	67d78beab8c52bae
@@ -482,7 +534,11 @@
 54333	55274	7463960395611572	esp-idf/lwip/CMakeFiles/__idf_lwip.dir/apps/ping/esp_ping.c.obj	70562f410a596870
 27872	28825	7463960130986563	esp-idf/esp_hw_support/CMakeFiles/__idf_esp_hw_support.dir/cpu.c.obj	fb58f1d43aae3d01
 23601	24373	7463960087111307	esp-idf/hal/CMakeFiles/__idf_hal.dir/i2s_hal.c.obj	63065c5dc1879516
+<<<<<<< HEAD
 47	272	7463960588231955	bootloader/bootloader.elf	ccf89bf6fabb6ce6
+=======
+45	292	7463960588231955	bootloader/bootloader.elf	ccf89bf6fabb6ce6
+>>>>>>> parent of 4111611 (DVP-MUX working)
 23852	24455	7463960087131301	esp-idf/hal/CMakeFiles/__idf_hal.dir/sdm_hal.c.obj	228d65c511eb4587
 40920	44158	7463960282001955	esp-idf/nvs_flash/CMakeFiles/__idf_nvs_flash.dir/src/nvs_types.cpp.obj	5bcfe3f8f3b0a3bd
 23703	24488	7463960087171322	esp-idf/hal/CMakeFiles/__idf_hal.dir/ds_hal.c.obj	b36b6909dddedf69
@@ -538,7 +594,11 @@
 27750	28354	7463960125364198	esp-idf/soc/CMakeFiles/__idf_soc.dir/esp32s3/timer_periph.c.obj	837bf5afe5bc1015
 100974	102157	7463960864967062	esp-idf/protocomm/CMakeFiles/__idf_protocomm.dir/src/transports/protocomm_console.c.obj	7379327ce81f12fe
 28262	28723	7463960130554356	esp-idf/esp_hw_support/CMakeFiles/__idf_esp_hw_support.dir/esp_memory_utils.c.obj	81f9e190da1f8f82
+<<<<<<< HEAD
 97	1215	7464039918671554	esp-idf/espressif__esp32-camera/CMakeFiles/__idf_espressif__esp32-camera.dir/driver/esp_camera.c.obj	165a33dede169998
+=======
+422	1741	7464012725893157	esp-idf/espressif__esp32-camera/CMakeFiles/__idf_espressif__esp32-camera.dir/driver/esp_camera.c.obj	165a33dede169998
+>>>>>>> parent of 4111611 (DVP-MUX working)
 28388	29340	7463960135844228	esp-idf/esp_hw_support/CMakeFiles/__idf_esp_hw_support.dir/mac_addr.c.obj	9732b51fecf24927
 68449	69349	7463960536369780	esp-idf/esp_adc/CMakeFiles/__idf_esp_adc.dir/adc_cali_curve_fitting.c.obj	5c724b9f13a73d45
 47806	49198	7463960331404854	esp-idf/lwip/CMakeFiles/__idf_lwip.dir/lwip/src/core/ipv4/autoip.c.obj	7180ffeed1523b67
@@ -553,7 +613,11 @@
 49140	50093	7463960344174204	esp-idf/lwip/CMakeFiles/__idf_lwip.dir/lwip/src/core/ipv6/ethip6.c.obj	876b5d0c3c33a158
 111212	112399	7463960967409408	esp-idf/espressif__esp32-camera/CMakeFiles/__idf_espressif__esp32-camera.dir/conversions/jpge.cpp.obj	b7af800e73616385
 29683	30729	7463960150484511	esp-idf/esp_hw_support/CMakeFiles/__idf_esp_hw_support.dir/port/async_memcpy_impl_gdma.c.obj	9a58ece25e3bf9b2
+<<<<<<< HEAD
 1142	1951	7464039925901663	esp-idf/espressif__esp32-camera/CMakeFiles/__idf_espressif__esp32-camera.dir/sensors/sc101iot.c.obj	1c203da9431a32a0
+=======
+2374	3213	7464012742601408	esp-idf/espressif__esp32-camera/CMakeFiles/__idf_espressif__esp32-camera.dir/sensors/sc101iot.c.obj	1c203da9431a32a0
+>>>>>>> parent of 4111611 (DVP-MUX working)
 29661	30760	7463960150844659	esp-idf/esp_hw_support/CMakeFiles/__idf_esp_hw_support.dir/sleep_retention.c.obj	73511788c41d38c
 29736	30889	7463960151416606	esp-idf/esp_hw_support/CMakeFiles/__idf_esp_hw_support.dir/esp_async_memcpy.c.obj	20031ea813aa8741
 52482	53349	7463960376633403	esp-idf/lwip/CMakeFiles/__idf_lwip.dir/lwip/src/netif/ppp/ppp.c.obj	c0b8857a1cfb9fcd
@@ -569,15 +633,26 @@
 103208	104101	7463960881285297	esp-idf/protobuf-c/libprotobuf-c.a	21c5302f15a8fee8
 91456	92812	7463960771474812	esp-idf/driver/CMakeFiles/__idf_driver.dir/rmt/rmt_rx.c.obj	3f6690c04642bed0
 31647	32338	7463960165668172	esp-idf/freertos/CMakeFiles/__idf_freertos.dir/FreeRTOS-Kernel/portable/xtensa/portasm.S.obj	b59c8948509055d0
+<<<<<<< HEAD
 1225	1996	7464039926572604	esp-idf/espressif__esp32-camera/CMakeFiles/__idf_espressif__esp32-camera.dir/sensors/sc030iot.c.obj	70697b3635798950
+=======
+368	1969	7464012727078510	esp-idf/espressif__esp32-camera/CMakeFiles/__idf_espressif__esp32-camera.dir/sensors/sc030iot.c.obj	70697b3635798950
+>>>>>>> parent of 4111611 (DVP-MUX working)
 59774	60701	7463960450498244	esp-idf/wpa_supplicant/CMakeFiles/__idf_wpa_supplicant.dir/src/eap_peer/eap_mschapv2.c.obj	6efd6ba43df0bbad
 31684	32393	7463960166322063	esp-idf/freertos/CMakeFiles/__idf_freertos.dir/FreeRTOS-Kernel/portable/xtensa/xtensa_vector_defaults.S.obj	56f2893eaa0c7cb4
 31972	32564	7463960167891574	esp-idf/freertos/CMakeFiles/__idf_freertos.dir/FreeRTOS-Kernel/portable/xtensa/xtensa_init.c.obj	524bb35877f49c4a
 105627	106391	7463960906892650	esp-idf/fatfs/CMakeFiles/__idf_fatfs.dir/port/freertos/ffsystem.c.obj	586a7910a5594218
+<<<<<<< HEAD
 243	390	7464037904897330	esp-idf/esp_app_format/libesp_app_format.a	68e18978e8fafa02
 32118	32838	7463960171159488	esp-idf/freertos/CMakeFiles/__idf_freertos.dir/port_common.c.obj	6789d78f7214a0cf
 46673	48278	7463960324722625	esp-idf/lwip/CMakeFiles/__idf_lwip.dir/lwip/src/core/tcp_in.c.obj	919de634fb41604f
 144	1615	7464039922888640	esp-idf/espressif__esp32-camera/CMakeFiles/__idf_espressif__esp32-camera.dir/sensors/ov3660.c.obj	3c9243dfbc0a36b7
+=======
+252	368	7464012714185092	esp-idf/esp_app_format/libesp_app_format.a	68e18978e8fafa02
+32118	32838	7463960171159488	esp-idf/freertos/CMakeFiles/__idf_freertos.dir/port_common.c.obj	6789d78f7214a0cf
+46673	48278	7463960324722625	esp-idf/lwip/CMakeFiles/__idf_lwip.dir/lwip/src/core/tcp_in.c.obj	919de634fb41604f
+1709	3036	7464012740552346	esp-idf/espressif__esp32-camera/CMakeFiles/__idf_espressif__esp32-camera.dir/sensors/ov3660.c.obj	3c9243dfbc0a36b7
+>>>>>>> parent of 4111611 (DVP-MUX working)
 70012	70746	7463960549676544	esp-idf/esp_gdbstub/CMakeFiles/__idf_esp_gdbstub.dir/xtensa/xt_debugexception.S.obj	7c0fdae08f261a10
 32353	32987	7463960173274514	esp-idf/freertos/CMakeFiles/__idf_freertos.dir/FreeRTOS-Kernel/croutine.c.obj	7d019f312e1798b3
 32140	33053	7463960173825807	esp-idf/freertos/CMakeFiles/__idf_freertos.dir/FreeRTOS-Kernel/portable/port_systick.c.obj	84be4d12531e8218
@@ -747,7 +822,11 @@
 62625	63843	7463960480325753	esp-idf/wpa_supplicant/CMakeFiles/__idf_wpa_supplicant.dir/src/utils/json.c.obj	1ec0ada4234e6f70
 60738	62485	7463960467681448	esp-idf/wpa_supplicant/CMakeFiles/__idf_wpa_supplicant.dir/src/eap_peer/eap_fast.c.obj	ac343e0694fb50c3
 61424	62609	7463960469533765	esp-idf/wpa_supplicant/CMakeFiles/__idf_wpa_supplicant.dir/src/eap_peer/eap_fast_common.c.obj	73be3d23fc71a543
+<<<<<<< HEAD
 176	1608	7464039922714993	esp-idf/espressif__esp32-camera/CMakeFiles/__idf_espressif__esp32-camera.dir/sensors/ov5640.c.obj	80c8f9b7e8b521de
+=======
+441	2548	7464012729139939	esp-idf/espressif__esp32-camera/CMakeFiles/__idf_espressif__esp32-camera.dir/sensors/ov5640.c.obj	80c8f9b7e8b521de
+>>>>>>> parent of 4111611 (DVP-MUX working)
 61522	62856	7463960470609283	esp-idf/wpa_supplicant/CMakeFiles/__idf_wpa_supplicant.dir/src/eap_peer/eap_fast_pac.c.obj	59ce4656a99a2d1d
 62029	63218	7463960474483859	esp-idf/wpa_supplicant/CMakeFiles/__idf_wpa_supplicant.dir/src/utils/common.c.obj	4adc565d4b7d7f3f
 61946	63278	7463960474640111	esp-idf/wpa_supplicant/CMakeFiles/__idf_wpa_supplicant.dir/src/utils/base64.c.obj	f497a7519de2e092
@@ -771,7 +850,11 @@
 65186	66424	7463960507418735	esp-idf/wpa_supplicant/CMakeFiles/__idf_wpa_supplicant.dir/esp_supplicant/src/crypto/crypto_mbedtls.c.obj	139b7fc04a742e1e
 64988	66699	7463960510214142	esp-idf/wpa_supplicant/CMakeFiles/__idf_wpa_supplicant.dir/esp_supplicant/src/crypto/tls_mbedtls.c.obj	16af2fbe8a1012e
 65919	66852	7463960511964307	esp-idf/wpa_supplicant/CMakeFiles/__idf_wpa_supplicant.dir/src/crypto/aes-wrap.c.obj	8d114ca80243d8bb
+<<<<<<< HEAD
 1267	2186	7464039928889399	esp-idf/espressif__esp32-camera/CMakeFiles/__idf_espressif__esp32-camera.dir/target/esp32s3/ll_cam.c.obj	2cc8a3cb12fc4b4c
+=======
+384	1851	7464012727208519	esp-idf/espressif__esp32-camera/CMakeFiles/__idf_espressif__esp32-camera.dir/target/esp32s3/ll_cam.c.obj	2cc8a3cb12fc4b4c
+>>>>>>> parent of 4111611 (DVP-MUX working)
 65373	67073	7463960513911216	esp-idf/wpa_supplicant/CMakeFiles/__idf_wpa_supplicant.dir/esp_supplicant/src/crypto/crypto_mbedtls-ec.c.obj	573c147dae2a6461
 65386	67308	7463960514616420	esp-idf/wpa_supplicant/CMakeFiles/__idf_wpa_supplicant.dir/esp_supplicant/src/crypto/crypto_mbedtls-rsa.c.obj	5cadade852a7743c
 66266	67341	7463960516456419	esp-idf/esp_eth/CMakeFiles/__idf_esp_eth.dir/src/esp_eth.c.obj	5c9e564e29666f31
@@ -779,11 +862,19 @@
 66688	67425	7463960516621700	esp-idf/esp_wifi/CMakeFiles/__idf_esp_wifi.dir/src/coexist.c.obj	d6782e583c7f18cc
 66427	67558	7463960517731709	esp-idf/wpa_supplicant/CMakeFiles/__idf_wpa_supplicant.dir/src/crypto/aes-ccm.c.obj	fdeb93e24e1c5cf3
 66570	67755	7463960519627121	esp-idf/wpa_supplicant/CMakeFiles/__idf_wpa_supplicant.dir/src/crypto/aes-unwrap.c.obj	a056cdf9e49f62ae
+<<<<<<< HEAD
 47	272	7463960588231955	bootloader/bootloader.map	ccf89bf6fabb6ce6
 66721	67836	7463960521087124	esp-idf/esp_wifi/CMakeFiles/__idf_esp_wifi.dir/src/mesh_event.c.obj	bc3fb84e687e65a2
 66882	67861	7463960521762451	esp-idf/esp_wifi/CMakeFiles/__idf_esp_wifi.dir/src/smartconfig_ack.c.obj	4a5ec589aa2ce2f7
 450	554	7464045447822657	esp-idf/main/libmain.a	efbc5d717ed098f9
 47	272	7463960588231955	D:/project-name/build/bootloader-prefix/src/bootloader-stamp/bootloader-build	ccf89bf6fabb6ce6
+=======
+45	292	7463960588231955	bootloader/bootloader.map	ccf89bf6fabb6ce6
+66721	67836	7463960521087124	esp-idf/esp_wifi/CMakeFiles/__idf_esp_wifi.dir/src/mesh_event.c.obj	bc3fb84e687e65a2
+66882	67861	7463960521762451	esp-idf/esp_wifi/CMakeFiles/__idf_esp_wifi.dir/src/smartconfig_ack.c.obj	4a5ec589aa2ce2f7
+494	607	7464026752903029	esp-idf/main/libmain.a	efbc5d717ed098f9
+45	292	7463960588231955	D:/project-name/build/bootloader-prefix/src/bootloader-stamp/bootloader-build	ccf89bf6fabb6ce6
+>>>>>>> parent of 4111611 (DVP-MUX working)
 67330	67956	7463960523062469	esp-idf/esp_wifi/CMakeFiles/__idf_esp_wifi.dir/src/wifi_default_ap.c.obj	2f361509d6303282
 67869	68972	7463960532439177	esp-idf/esp-tls/CMakeFiles/__idf_esp-tls.dir/esp_tls_error_capture.c.obj	ae76e45aabf23c77
 68399	69313	7463960535699785	esp-idf/esp_adc/CMakeFiles/__idf_esp_adc.dir/adc_cali.c.obj	4e1568f3d962a53e
@@ -803,7 +894,11 @@
 69950	70651	7463960548134288	esp-idf/esp_gdbstub/CMakeFiles/__idf_esp_gdbstub.dir/xtensa/gdbstub-entry.S.obj	6ebfdab514cd0604
 69887	70858	7463960549831995	esp-idf/esp_gdbstub/CMakeFiles/__idf_esp_gdbstub.dir/xtensa/gdbstub_xtensa.c.obj	78dc79ae9cad8be7
 69998	70949	7463960551340824	esp-idf/esp_gdbstub/CMakeFiles/__idf_esp_gdbstub.dir/esp_common/gdbstub_common.c.obj	56df12208ee12acd
+<<<<<<< HEAD
 2187	2339	7464039930444030	esp-idf/espressif__esp32-camera/libespressif__esp32-camera.a	9abace6ed83c595e
+=======
+3289	3507	7464012745493556	esp-idf/espressif__esp32-camera/libespressif__esp32-camera.a	9abace6ed83c595e
+>>>>>>> parent of 4111611 (DVP-MUX working)
 87533	88442	7463960727202801	esp-idf/driver/CMakeFiles/__idf_driver.dir/sdspi_transaction.c.obj	e2683a3e7466d890
 70858	71510	7463960558184239	esp-idf/esp_http_client/CMakeFiles/__idf_esp_http_client.dir/lib/http_utils.c.obj	14247071b423dd42
 106900	107769	7463960919894838	esp-idf/perfmon/CMakeFiles/__idf_perfmon.dir/xtensa_perfmon_apis.c.obj	aa27cf60a3558d76
@@ -848,7 +943,11 @@
 109472	110451	7463960947033145	esp-idf/spiffs/libspiffs.a	6e33cdae173404fb
 95118	96234	7463960802502979	esp-idf/app_trace/CMakeFiles/__idf_app_trace.dir/app_trace_util.c.obj	a0a64cbc8b7ddd50
 84642	84804	7463960691581778	esp-idf/pthread/libpthread.a	dab4781db1f833c0
+<<<<<<< HEAD
 47	272	7463960588231955	D:/project-name/build/bootloader/bootloader.bin	ccf89bf6fabb6ce6
+=======
+45	292	7463960588231955	D:/project-name/build/bootloader/bootloader.bin	ccf89bf6fabb6ce6
+>>>>>>> parent of 4111611 (DVP-MUX working)
 104931	106035	7463960903578695	esp-idf/sdmmc/CMakeFiles/__idf_sdmmc.dir/sdmmc_sd.c.obj	473d4620d523102a
 98450	99452	7463960835557063	esp-idf/esp_hid/CMakeFiles/__idf_esp_hid.dir/src/esp_hidh.c.obj	542eba12e7721d75
 85031	85139	7463960695196645	D:/project-name/build/bootloader-prefix/src/bootloader-stamp/bootloader-install	7b19a4fd0e60c4b1
@@ -856,7 +955,11 @@
 85139	85325	7463960697010198	bootloader-prefix/src/bootloader-stamp/bootloader-done	a250314c56902c8f
 109004	110288	7463960945419306	esp-idf/usb/CMakeFiles/__idf_usb.dir/usb_host.c.obj	12ef939a88d6796e
 85139	85325	7463960697010198	D:/project-name/build/CMakeFiles/bootloader-complete	a250314c56902c8f
+<<<<<<< HEAD
 554	5122	7464045493161726	D:/project-name/build/esp-idf/esp_system/ld/sections.ld	167dc532ea1ae1
+=======
+608	5241	7464026798956455	D:/project-name/build/esp-idf/esp_system/ld/sections.ld	167dc532ea1ae1
+>>>>>>> parent of 4111611 (DVP-MUX working)
 85139	85325	7463960697010198	D:/project-name/build/bootloader-prefix/src/bootloader-stamp/bootloader-done	a250314c56902c8f
 85621	85752	7463960701318570	esp-idf/mbedtls/mbedtls/library/libmbedx509.a	a8d679201b6c66df
 86352	86724	7463960710844432	esp-idf/mbedtls/x509_crt_bundle	d05139e062867b37
@@ -864,7 +967,10 @@
 86724	86961	7463960713411375	D:/project-name/build/x509_crt_bundle.S	5e566ad8f7a09781
 86961	87206	7463960715540599	esp-idf/xtensa/CMakeFiles/__idf_xtensa.dir/eri.c.obj	11c5793dcb655a91
 87008	87617	7463960719691452	esp-idf/efuse/CMakeFiles/__idf_efuse.dir/esp32s3/esp_efuse_utility.c.obj	8a0e1347ee70347b
+<<<<<<< HEAD
 5	13370	7464049521829891	build.ninja	7b3780678892f303
+=======
+>>>>>>> parent of 4111611 (DVP-MUX working)
 94123	95231	7463960794323226	esp-idf/driver/CMakeFiles/__idf_driver.dir/touch_sensor_common.c.obj	1c19b1b5fde0b34e
 87089	87770	7463960720941633	esp-idf/efuse/CMakeFiles/__idf_efuse.dir/esp32s3/esp_efuse_rtc_calib.c.obj	4869abf826a3113e
 96240	96870	7463960810641928	esp-idf/unity/CMakeFiles/__idf_unity.dir/port/esp/unity_utils_memory_esp.c.obj	514e0c7396068197
@@ -985,6 +1091,7 @@
 115657	116598	7463961009663969	esp-idf/espressif__usb_device_uvc/CMakeFiles/__idf_espressif__usb_device_uvc.dir/usb_device_uvc.c.obj	bb565d2e788c8046
 115956	116710	7463961010823170	esp-idf/main/CMakeFiles/__idf_main.dir/__/managed_components/espressif__usb_device_uvc/tusb/usb_descriptors.c.obj	5c1b88f34c422b90
 116669	116910	7463961012876608	esp-idf/espressif__tinyusb/libespressif__tinyusb.a	4b9a56cdddefe504
+<<<<<<< HEAD
 57	450	7464045446771175	esp-idf/main/CMakeFiles/__idf_main.dir/main.c.obj	887b6b175090d292
 554	5122	7464045493161726	esp-idf/esp_system/ld/sections.ld	167dc532ea1ae1
 5331	5447	7463965048289719	CMakeFiles/project-name.elf.dir/project_elf_src_esp32s3.c.obj	4ca42ac217fc64b1
@@ -1009,3 +1116,29 @@
 9554	9946	7464049622777449	D:/project-name/build/.bin_timestamp	c5b2ff134f186fd4
 9947	10072	0	esp-idf/esptool_py/CMakeFiles/app_check_size	ea4403c7eee2403c
 9947	10072	0	D:/project-name/build/esp-idf/esptool_py/CMakeFiles/app_check_size	ea4403c7eee2403c
+=======
+55	493	7464026751745966	esp-idf/main/CMakeFiles/__idf_main.dir/main.c.obj	887b6b175090d292
+608	5241	7464026798956455	esp-idf/esp_system/ld/sections.ld	167dc532ea1ae1
+5331	5447	7463965048289719	CMakeFiles/project-name.elf.dir/project_elf_src_esp32s3.c.obj	4ca42ac217fc64b1
+5242	9059	7464026837006954	project-name.elf	3207c45f4c362f09
+6	16736	7464029967095921	build.ninja	7b3780678892f303
+64	231	7464029970925924	esp-idf/esp_app_format/CMakeFiles/__idf_esp_app_format.dir/esp_app_desc.c.obj	7cebdeb4e65378da
+55	293	7463960588231955	bootloader-prefix/src/bootloader-stamp/bootloader-build	ccf89bf6fabb6ce6
+55	293	7463960588231955	bootloader/bootloader.elf	ccf89bf6fabb6ce6
+55	293	7463960588231955	bootloader/bootloader.bin	ccf89bf6fabb6ce6
+55	293	7463960588231955	bootloader/bootloader.map	ccf89bf6fabb6ce6
+55	293	7463960588231955	D:/project-name/build/bootloader-prefix/src/bootloader-stamp/bootloader-build	ccf89bf6fabb6ce6
+55	293	7463960588231955	D:/project-name/build/bootloader/bootloader.elf	ccf89bf6fabb6ce6
+55	293	7463960588231955	D:/project-name/build/bootloader/bootloader.bin	ccf89bf6fabb6ce6
+55	293	7463960588231955	D:/project-name/build/bootloader/bootloader.map	ccf89bf6fabb6ce6
+232	347	7464029972028338	esp-idf/esp_app_format/libesp_app_format.a	68e18978e8fafa02
+348	723	7464029975848166	esp-idf/main/CMakeFiles/__idf_main.dir/main.c.obj	887b6b175090d292
+724	837	7464029976976869	esp-idf/main/libmain.a	efbc5d717ed098f9
+837	5347	7464030021760706	esp-idf/esp_system/ld/sections.ld	167dc532ea1ae1
+837	5347	7464030021760706	D:/project-name/build/esp-idf/esp_system/ld/sections.ld	167dc532ea1ae1
+5347	9024	7464030058510103	project-name.elf	3207c45f4c362f09
+9025	9428	7464030062890464	.bin_timestamp	c5b2ff134f186fd4
+9025	9428	7464030062890464	D:/project-name/build/.bin_timestamp	c5b2ff134f186fd4
+9429	9546	0	esp-idf/esptool_py/CMakeFiles/app_check_size	ea4403c7eee2403c
+9429	9546	0	D:/project-name/build/esp-idf/esptool_py/CMakeFiles/app_check_size	ea4403c7eee2403c
+>>>>>>> parent of 4111611 (DVP-MUX working)
