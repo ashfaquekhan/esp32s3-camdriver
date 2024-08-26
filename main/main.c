@@ -54,7 +54,7 @@ static esp_err_t init_camera(void) {
         .frame_size = FRAMESIZE_HVGA,
         .pixel_format = PIXFORMAT_JPEG,
         .fb_location = CAMERA_FB_IN_DRAM,
-        .jpeg_quality = 20,
+        .jpeg_quality = 10,
         .fb_count = 1,
         .grab_mode = CAMERA_GRAB_WHEN_EMPTY
     };
@@ -146,7 +146,7 @@ const char* html_content = R"rawliteral(
 </head>
 <body>
     <h1>ESP32-CAM</h1>
-    <img src="/stream" width="640" height="480" />
+    <img src="/stream" width="480" height="320" />
 </body>
 </html>
 )rawliteral";
