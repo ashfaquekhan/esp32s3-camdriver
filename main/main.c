@@ -9,6 +9,18 @@
 #include "camera_pins.h"
 #include "connect_wifi.h"
 
+#define PIN1 GPIO_NUM_47 
+#define PIN2 GPIO_NUM_48
+
+static bool state=0;
+
+void swap()
+{
+    state=!state;
+    gpio_set_level(PIN1, state);
+    gpio_set_level(PIN2, !state);
+}
+
 static const char *TAG = "esp32-cam Webserver";
 
 #define PART_BOUNDARY "123456789000000000000987654321"
@@ -41,12 +53,12 @@ static esp_err_t init_camera(void)
         .pin_href = CAM_PIN_HREF,
         .pin_pclk = CAM_PIN_PCLK,
         .xclk_freq_hz = CONFIG_XCLK_FREQ,
-        .frame_size = FRAMESIZE_QVGA,
+        .frame_size = FRAMESIZE_CIF,
         .pixel_format = PIXFORMAT_JPEG,
         .fb_location = CAMERA_FB_IN_DRAM,
-        .jpeg_quality = 20,
+        .jpeg_quality = 30,
         .fb_count = 1,
-        .grab_mode = CAMERA_GRAB_WHEN_EMPTY
+        .grab_mode = CAMERA_GRAB_LATEST
     };
 
     esp_err_t err = esp_camera_init(&camera_config);
@@ -59,6 +71,7 @@ static esp_err_t init_camera(void)
 
 // Function to handle streaming
 esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
+    
     camera_fb_t * fb = NULL;
     esp_err_t res = ESP_OK;
     size_t _jpg_buf_len;
@@ -75,7 +88,9 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
     }
 
     while(true){
+        
         fb = esp_camera_fb_get();
+        swap();
         if (!fb) {
             ESP_LOGE(TAG, "Camera capture failed");
             res = ESP_FAIL;
@@ -115,6 +130,7 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
         int64_t frame_time = fr_end - last_frame;
         last_frame = fr_end;
         frame_time /= 1000;
+        
     }
 
     last_frame = 0;
@@ -202,6 +218,15 @@ httpd_handle_t setup_server(void)
 
 void app_main()
 {
+    esp_rom_gpio_pad_select_gpio(PIN1);
+    esp_rom_gpio_pad_select_gpio(PIN2);
+    gpio_set_direction(PIN1, GPIO_MODE_OUTPUT);
+    gpio_set_direction(PIN2, GPIO_MODE_OUTPUT);
+    // gpio_set_level(PIN1, 0);
+    // gpio_set_level(PIN2, 1);
+    swap();
+
+
     esp_err_t err;
 
     // Initialize NVS
@@ -225,13 +250,15 @@ void app_main()
             .pull_up_en = GPIO_PULLUP_DISABLE
         };
         gpio_config(&io_conf);
-
+        swap();
         err = init_camera();
         if (err != ESP_OK)
         {
             printf("err: %s\n", esp_err_to_name(err));
             return;
         }
+        // swap();
+
         setup_server();
         ESP_LOGI(TAG, "ESP32 CAM Web Server is up and running\n");
     }
@@ -239,4 +266,4 @@ void app_main()
     {
         ESP_LOGI(TAG, "Failed to connect to Wi-Fi, check your network Credentials\n");
     }
-}
+}   
