@@ -38,7 +38,7 @@ static const char* _STREAM_CONTENT_TYPE = "multipart/x-mixed-replace;boundary=" 
 static const char* _STREAM_BOUNDARY = "\r\n--" PART_BOUNDARY "\r\n";
 static const char* _STREAM_PART = "Content-Type: image/jpeg\r\nContent-Length: %u\r\n\r\n";
 
-#define CONFIG_XCLK_FREQ 16000000 
+#define CONFIG_XCLK_FREQ 8000000  //20000000
 
 static esp_err_t init_camera(void)
 {
