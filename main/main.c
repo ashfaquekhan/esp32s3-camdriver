@@ -56,7 +56,7 @@ static esp_err_t init_camera(void)
         .frame_size = FRAMESIZE_QVGA,
         .pixel_format = PIXFORMAT_JPEG,
         .fb_location = CAMERA_FB_IN_DRAM,
-        .jpeg_quality = 20,
+        .jpeg_quality = 10,
         .fb_count = 1,
         .grab_mode = CAMERA_GRAB_LATEST
     };

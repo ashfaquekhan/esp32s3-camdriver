@@ -1,7 +1,11 @@
 {
     "version":            "1",
     "project_name":       "project-name",
+<<<<<<< HEAD
     "project_version":    "38e4b13-dirty",
+=======
+    "project_version":    "4111611-dirty",
+>>>>>>> parent of 38e4b13 (Revert "DVP-MUX working")
     "project_path":       "D:/project-name",
     "idf_path":           "C:/Users/ashfa/esp/v5.0.6/esp-idf",
     "build_dir":          "D:/project-name/build",
