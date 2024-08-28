@@ -1,5 +1,6 @@
 ## IDF Component Manager Manifest File
 dependencies:
+  espressif/opencv: "^4.7.0~5"
   espressif/usb_device_uvc: "^1.1.0"
   espressif/esp32-camera: "^2.0.10"
   ## Required IDF version
