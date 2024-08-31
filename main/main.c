@@ -1,9 +1,3 @@
-/*
- * SPDX-FileCopyrightText: 2022-2024 Espressif Systems (Shanghai) CO LTD
- *
- * SPDX-License-Identifier: Apache-2.0
- */
-
 #include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
@@ -15,6 +9,28 @@
 #include "esp_camera.h"
 #include "usb_device_uvc.h"
 #include "uvc_frame_config.h"
+
+#define PIN1 GPIO_NUM_47 
+#define PIN2 GPIO_NUM_48
+
+static bool state=0;
+
+void swap()
+{
+    state=!state;
+    gpio_set_level(PIN1, state);
+    gpio_set_level(PIN2, !state);
+}
+void swapInit()
+{
+    esp_rom_gpio_pad_select_gpio(PIN1);
+    esp_rom_gpio_pad_select_gpio(PIN2);
+    gpio_set_direction(PIN1, GPIO_MODE_OUTPUT);
+    gpio_set_direction(PIN2, GPIO_MODE_OUTPUT);
+    // gpio_set_level(PIN1, 0);
+    // gpio_set_level(PIN2, 1);
+    swap();
+}
 
 #if CONFIG_CAMERA_MODULE_ESP_S3_EYE
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
@@ -99,30 +115,40 @@ static esp_err_t camera_init(uint32_t xclk_freq_hz, pixformat_t pixel_format, fr
         .fb_location = CAMERA_FB_IN_DRAM
     };
 
-    // initialize the camera sensor
+
     esp_err_t ret = esp_camera_init(&camera_config);
-    if (ret != ESP_OK) {
+    esp_camera_deinit();
+    swap();
+    ret = esp_camera_init(&camera_config);
+    if (ret != ESP_OK)
+    {
         return ret;
     }
+
+    // // initialize the camera sensor
+    // esp_err_t ret = esp_camera_init(&camera_config);
+    // if (ret != ESP_OK) {
+    //     return ret;
+    // }
 
     // Get the sensor object, and then use some of its functions to adjust the parameters when taking a photo.
     // Note: Do not call functions that set resolution, set picture format and PLL clock,
     // If you need to reset the appeal parameters, please reinitialize the sensor.
     sensor_t *s = esp_camera_sensor_get();
-    s->set_vflip(s, 1); // flip it back
-    // initial sensors are flipped vertically and colors are a bit saturated
-    if (s->id.PID == OV3660_PID) {
-        s->set_brightness(s, 1); // up the blightness just a bit
-        s->set_saturation(s, -2); // lower the saturation
-    }
+    // s->set_vflip(s, 1); // flip it back
+    // // initial sensors are flipped vertically and colors are a bit saturated
+    // if (s->id.PID == OV3660_PID) {
+    //     s->set_brightness(s, 1); // up the blightness just a bit
+    //     s->set_saturation(s, -2); // lower the saturation
+    // }
 
-    if (s->id.PID == OV3660_PID || s->id.PID == OV2640_PID) {
-        s->set_vflip(s, 1); // flip it back
-    } else if (s->id.PID == GC0308_PID) {
-        s->set_hmirror(s, 0);
-    } else if (s->id.PID == GC032A_PID) {
-        s->set_vflip(s, 1);
-    }
+    // if (s->id.PID == OV3660_PID || s->id.PID == OV2640_PID) {
+    //     s->set_vflip(s, 1); // flip it back
+    // } else if (s->id.PID == GC0308_PID) {
+    //     s->set_hmirror(s, 0);
+    // } else if (s->id.PID == GC032A_PID) {
+    //     s->set_vflip(s, 1);
+    // }
 
     // Get the basic information of the sensor.
     camera_sensor_info_t *s_info = esp_camera_sensor_get_info(&(s->id));
@@ -158,7 +184,7 @@ static esp_err_t camera_start_cb(uvc_format_t format, int width, int height, int
     (void)cb_ctx;
     ESP_LOGI(TAG, "Camera Start");
     ESP_LOGI(TAG, "Format: %d, width: %d, height: %d, rate: %d", format, width, height, rate);
-    framesize_t frame_size = FRAMESIZE_QVGA;
+    framesize_t frame_size = FRAMESIZE_HVGA;
     int jpeg_quality = 14;
 
     if (format != UVC_FORMAT_JPEG) {
@@ -210,6 +236,7 @@ static uvc_fb_t* camera_fb_get_cb(void *cb_ctx)
     if (!s_fb.cam_fb_p) {
         return NULL;
     }
+    swap();
     s_fb.uvc_fb.buf = s_fb.cam_fb_p->buf;
     s_fb.uvc_fb.len = s_fb.cam_fb_p->len;
     s_fb.uvc_fb.width = s_fb.cam_fb_p->width;
@@ -234,6 +261,7 @@ static void camera_fb_return_cb(uvc_fb_t *fb, void *cb_ctx)
 
 void app_main(void)
 {
+    swapInit();
     // if using esp-s3-eye board, show the GUI
 #if CONFIG_CAMERA_MODULE_ESP_S3_EYE
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
