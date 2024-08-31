@@ -1,8 +1,8 @@
 #ifndef CAMERA_PINS_H_
 #define CAMERA_PINS_H_
 
-// #define CAMERA_MODEL_XIAO_ESP32S3 1
-#define CUSTOM_BOARD 1
+#define CAMERA_MODEL_XIAO_ESP32S3 1
+// #define CUSTOM_BOARD 1
 
 
 #if defined(CUSTOM_BOARD)
@@ -61,6 +61,9 @@
   #define CAM_PIN_VSYNC   38
   #define CAM_PIN_HREF    47
   #define CAM_PIN_PCLK    13
+
+#define CAMERA_MODULE_NAME "ESP32-S3"
+#define CAMERA_MODULE_SOC "CAMERA_MODEL_XIAO_ESP32S3"
 
 #else
     #error "Camera model not selected"
