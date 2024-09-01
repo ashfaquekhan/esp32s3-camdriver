@@ -66,7 +66,7 @@ static esp_err_t init_camera(void)
 
         .xclk_freq_hz = CONFIG_XCLK_FREQ,
 
-        .frame_size = FRAMESIZE_QVGA,
+        .frame_size = FRAMESIZE_HVGA,
         .pixel_format = PIXFORMAT_JPEG,
         // .fb_location = CAMERA_FB_IN_PSRAM,
         .fb_location = CAMERA_FB_IN_DRAM,
@@ -76,14 +76,23 @@ static esp_err_t init_camera(void)
         };
         //CAMERA_GRAB_LATEST. Sets when buffers should be filled
     esp_err_t err = esp_camera_init(&camera_config);
+    sensor_t * s = esp_camera_sensor_get();
+    s->set_special_effect(s, 2);
     esp_camera_deinit();
+    
+    
     swap();
+    
     err = esp_camera_init(&camera_config);
+    s = esp_camera_sensor_get();
+    s->set_special_effect(s, 2);
+
     if (err != ESP_OK)
     {
         return err;
     }
     return ESP_OK;
+
 }
 
 esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
