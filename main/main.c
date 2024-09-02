@@ -43,8 +43,90 @@ static const char* _STREAM_PART = "Content-Type: image/jpeg\r\nContent-Length: %
 
 #define CONFIG_XCLK_FREQ 20000000  //20000000 / 8000000
 
-#define MAX_DISPARITY 10
+#define MAX_DISPARITY 1
 #define BLOCK_SIZE 5
+
+#define THRESHOLD 64 
+
+void binary_sketcher_on_roi(camera_fb_t *frame, size_t x, size_t y, size_t roi_width, size_t roi_height) {
+    if (!frame || !frame->buf) {
+        return; // If frame or buffer is NULL, do nothing
+    }
+
+    size_t width = frame->width;
+    size_t height = frame->height;
+
+    // Ensure the ROI is within the frame bounds
+    if (x >= width || y >= height) {
+        return; // If the top-left corner is out of bounds, do nothing
+    }
+
+    size_t max_x = x + roi_width;
+    size_t max_y = y + roi_height;
+
+    if (max_x > width) {
+        max_x = width; // Adjust width if it exceeds frame bounds
+    }
+    if (max_y > height) {
+        max_y = height; // Adjust height if it exceeds frame bounds
+    }
+
+    // Perform binary conversion on the selected ROI
+    for (size_t j = y; j < max_y; ++j) {
+        for (size_t i = x; i < max_x; ++i) {
+            uint8_t pixel_value = frame->buf[j * width + i];
+            if (pixel_value >= THRESHOLD) {
+                frame->buf[j * width + i] = 255; // Set to white
+            } else {
+                frame->buf[j * width + i] = 0; // Set to black
+            }
+        }
+    }
+}
+
+void draw_bounding_box(camera_fb_t *frame, size_t x, size_t y, size_t box_width, size_t box_height) {
+    if (!frame || !frame->buf) {
+        return; // If frame or buffer is NULL, do nothing
+    }
+
+    size_t width = frame->width;
+    size_t height = frame->height;
+
+    // Ensure the bounding box is within the frame bounds
+    if (x >= width || y >= height) {
+        return; // If the top-left corner is out of bounds, do nothing
+    }
+
+    size_t max_x = x + box_width;
+    size_t max_y = y + box_height;
+
+    if (max_x > width) {
+        max_x = width; // Adjust width if it exceeds frame bounds
+    }
+    if (max_y > height) {
+        max_y = height; // Adjust height if it exceeds frame bounds
+    }
+
+    // Draw the top and bottom borders
+    for (size_t i = x; i < max_x; ++i) {
+        if (y < height) {
+            frame->buf[y * width + i] = 0; // Top border
+        }
+        if (max_y - 1 < height) {
+            frame->buf[(max_y - 1) * width + i] = 0; // Bottom border
+        }
+    }
+
+    // Draw the left and right borders
+    for (size_t j = y; j < max_y; ++j) {
+        if (x < width) {
+            frame->buf[j * width + x] = 0; // Left border
+        }
+        if (max_x - 1 < width) {
+            frame->buf[j * width + max_x - 1] = 0; // Right border
+        }
+    }
+}
 
 camera_fb_t* calculate_depth_map(camera_fb_t *left_frame, camera_fb_t *right_frame) {
     // Check if the input frames have the same dimensions
@@ -88,7 +170,7 @@ camera_fb_t* calculate_depth_map(camera_fb_t *left_frame, camera_fb_t *right_fra
                     for (int kx = -BLOCK_SIZE / 2; kx <= BLOCK_SIZE / 2; ++kx) {
                         int left_index = (y + ky) * width + (x + kx);
                         int right_index = (y + ky) * width + (x + kx - d);
-                        if ((x + kx - d) >= 0 && (x + kx - d) < width) {
+                        if (0 < (x + kx - d) && (x + kx - d) < width) {
                             int diff = left_frame->buf[left_index] - right_frame->buf[right_index];
                             ssd += diff * diff;
                         }
@@ -135,7 +217,7 @@ static esp_err_t init_camera(void)
 
         .xclk_freq_hz = CONFIG_XCLK_FREQ,
 
-        .frame_size = FRAMESIZE_QQVGA,
+        .frame_size = FRAMESIZE_96X96,
         .pixel_format = PIXFORMAT_GRAYSCALE,
         // .fb_location = CAMERA_FB_IN_PSRAM,
         .fb_location = CAMERA_FB_IN_DRAM,
@@ -166,7 +248,6 @@ static esp_err_t init_camera(void)
 
 esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
     camera_fb_t * fb = NULL;
-    camera_fb_t * fbt = NULL;
     esp_err_t res = ESP_OK;
     size_t _jpg_buf_len;
     uint8_t * _jpg_buf;
@@ -183,9 +264,12 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
 
     while(true){
         fb = esp_camera_fb_get();
-        // swap(500);
+
+        // draw_bounding_box(fb,45,45,20,20);
+         binary_sketcher_on_roi(fb, 10,10,80,80);
+        // swap(10);
         // fbt = esp_camera_fb_get();
-        // swap(500);
+        // swap(10);
         // fb = calculate_depth_map(fb,fbt);
         // esp_camera_fb_return(fbt);
 
@@ -224,7 +308,7 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
             free(_jpg_buf);
         }
         esp_camera_fb_return(fb);
-        esp_camera_fb_return(fbt);
+        // esp_camera_fb_return(fbt);
         if(res != ESP_OK){
             break;
         }
