@@ -14,11 +14,14 @@
 
 static bool state=0;
 
-void swap()
+void swap(int delay_ms)
 {
     state=!state;
     gpio_set_level(PIN1, state);
     gpio_set_level(PIN2, !state);
+
+    vTaskDelay(delay_ms / portTICK_PERIOD_MS);
+
 }
 void swapInit()
 {
@@ -28,7 +31,7 @@ void swapInit()
     gpio_set_direction(PIN2, GPIO_MODE_OUTPUT);
     // gpio_set_level(PIN1, 0);
     // gpio_set_level(PIN2, 1);
-    swap();
+    swap(10);
 }
 
 static const char *TAG = "esp32-cam Webserver";
@@ -39,6 +42,72 @@ static const char* _STREAM_BOUNDARY = "\r\n--" PART_BOUNDARY "\r\n";
 static const char* _STREAM_PART = "Content-Type: image/jpeg\r\nContent-Length: %u\r\n\r\n";
 
 #define CONFIG_XCLK_FREQ 20000000  //20000000 / 8000000
+
+#define MAX_DISPARITY 10
+#define BLOCK_SIZE 5
+
+camera_fb_t* calculate_depth_map(camera_fb_t *left_frame, camera_fb_t *right_frame) {
+    // Check if the input frames have the same dimensions
+    if (left_frame->width != right_frame->width || left_frame->height != right_frame->height) {
+        return NULL; // Return NULL if dimensions don't match
+    }
+
+    size_t width = left_frame->width;
+    size_t height = left_frame->height;
+
+    // Allocate memory for the depth frame
+    camera_fb_t *depth_frame = NULL;
+    // if (!depth_frame) {
+    //     return NULL; // Memory allocation failed
+    // }
+
+    depth_frame->width = width;
+    depth_frame->height = height;
+    depth_frame->len = width * height; // Depth map will be a grayscale image
+    depth_frame->format = left_frame->format; // Assuming the same format for depth map
+    depth_frame->buf = (uint8_t *)malloc(depth_frame->len);
+    if (!depth_frame->buf) {
+        free(depth_frame);
+        return NULL; // Memory allocation failed
+    }
+
+    // Initialize depth map to zero
+    memset(depth_frame->buf, 0, depth_frame->len);
+
+    // Simple block matching for disparity calculation
+    for (size_t y = BLOCK_SIZE; y < height - BLOCK_SIZE; ++y) {
+        for (size_t x = BLOCK_SIZE; x < width - BLOCK_SIZE; ++x) {
+            int best_disparity = 0;
+            int min_ssd = INT_MAX;
+
+            for (int d = 0; d < MAX_DISPARITY; ++d) {
+                int ssd = 0;
+
+                // Sum of squared differences (SSD) within the block
+                for (int ky = -BLOCK_SIZE / 2; ky <= BLOCK_SIZE / 2; ++ky) {
+                    for (int kx = -BLOCK_SIZE / 2; kx <= BLOCK_SIZE / 2; ++kx) {
+                        int left_index = (y + ky) * width + (x + kx);
+                        int right_index = (y + ky) * width + (x + kx - d);
+                        if ((x + kx - d) >= 0 && (x + kx - d) < width) {
+                            int diff = left_frame->buf[left_index] - right_frame->buf[right_index];
+                            ssd += diff * diff;
+                        }
+                    }
+                }
+
+                // Update best disparity if a lower SSD is found
+                if (ssd < min_ssd) {
+                    min_ssd = ssd;
+                    best_disparity = d;
+                }
+            }
+
+            // Store the best disparity in the depth map
+            depth_frame->buf[y * width + x] = (uint8_t)best_disparity;
+        }
+    }
+    return depth_frame;
+}
 
 static esp_err_t init_camera(void)
 {
@@ -66,26 +135,26 @@ static esp_err_t init_camera(void)
 
         .xclk_freq_hz = CONFIG_XCLK_FREQ,
 
-        .frame_size = FRAMESIZE_HVGA,
-        .pixel_format = PIXFORMAT_JPEG,
+        .frame_size = FRAMESIZE_QQVGA,
+        .pixel_format = PIXFORMAT_GRAYSCALE,
         // .fb_location = CAMERA_FB_IN_PSRAM,
         .fb_location = CAMERA_FB_IN_DRAM,
-        .jpeg_quality = 20,
+        // .jpeg_quality = 20,
         .fb_count = 1,
         .grab_mode = CAMERA_GRAB_WHEN_EMPTY
         };
         //CAMERA_GRAB_LATEST. Sets when buffers should be filled
     esp_err_t err = esp_camera_init(&camera_config);
-    sensor_t * s = esp_camera_sensor_get();
-    s->set_special_effect(s, 2);
+    // sensor_t * s = esp_camera_sensor_get();
+    // s->set_special_effect(s, 2);
     esp_camera_deinit();
     
     
-    swap();
+    swap(10);
     
     err = esp_camera_init(&camera_config);
-    s = esp_camera_sensor_get();
-    s->set_special_effect(s, 2);
+    // s = esp_camera_sensor_get();
+    // s->set_special_effect(s, 2);
 
     if (err != ESP_OK)
     {
@@ -97,6 +166,7 @@ static esp_err_t init_camera(void)
 
 esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
     camera_fb_t * fb = NULL;
+    camera_fb_t * fbt = NULL;
     esp_err_t res = ESP_OK;
     size_t _jpg_buf_len;
     uint8_t * _jpg_buf;
@@ -113,20 +183,28 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
 
     while(true){
         fb = esp_camera_fb_get();
+        // swap(500);
+        // fbt = esp_camera_fb_get();
+        // swap(500);
+        // fb = calculate_depth_map(fb,fbt);
+        // esp_camera_fb_return(fbt);
+
         if (!fb) {
             ESP_LOGE(TAG, "Camera capture failed");
             res = ESP_FAIL;
             break;
         }
+        
         if(fb->format != PIXFORMAT_JPEG){
+            swap(0);
             bool jpeg_converted = frame2jpg(fb, 80, &_jpg_buf, &_jpg_buf_len);
             if(!jpeg_converted){
                 ESP_LOGE(TAG, "JPEG compression failed");
                 esp_camera_fb_return(fb);
                 res = ESP_FAIL;
             }
-        } else {
-            swap();
+        } 
+        else {
             _jpg_buf_len = fb->len;
             _jpg_buf = fb->buf;
         }
@@ -146,6 +224,7 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
             free(_jpg_buf);
         }
         esp_camera_fb_return(fb);
+        esp_camera_fb_return(fbt);
         if(res != ESP_OK){
             break;
         }
