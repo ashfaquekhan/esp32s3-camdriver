@@ -67,13 +67,17 @@ void swapInit()
 
 #define THRESHOLD 40 
 
-void copy_frame_buffer(uint8_t *from, uint8_t *to, size_t len) {
-    if (from == NULL || to == NULL) {
-        return;  // Handle invalid pointers
+bool copy_frame_buffer(camera_fb_t *fb, uint8_t *dest_buf, size_t buf_size)
+{
+    // Check if the provided buffer is large enough
+    if (buf_size < fb->len) {
+        return false;  // Buffer is not large enough
     }
-    // Use standard memcpy for copying frame buffer
-    // memcpy(output_buf, frame->buf, len);
-    memcpy(to,from,len);
+
+    // Copy the frame buffer to the destination buffer
+    memcpy(dest_buf, fb->buf, fb->len);
+    
+    return true;  // Copy successful
 }
 
 
@@ -180,56 +184,47 @@ static esp_err_t init_camera(void)
 }
 
 #define MAX_DISPARITY 8  // Maximum disparity range (pixels)
-#define BLOCK_SIZE 2      // Block size for block matching
+#define BLOCK_SIZE 5      // Block size for block matching
 
-uint8_t* calculate_disparity_map(uint8_t *left_frame, uint8_t *right_frame, size_t width, size_t height) {
-    // Allocate memory for the disparity map
-    uint8_t *disparity_map = (uint8_t *)heap_caps_malloc(width * height, MALLOC_CAP_DMA);
-    if (disparity_map == NULL) {
-        return NULL;  // Handle memory allocation failure
+void computeDisparity(uint8_t *leftImage, uint8_t *rightImage, uint8_t *output,
+                      int imageWidth, int imageHeight,
+                      int roiX, int roiY, int roiWidth, int roiHeight,
+                      int maxDisparity) {
+    int x, y, d;
+    
+    // Ensure ROI dimensions are within image bounds
+    if (roiX < 0 || roiY < 0 || roiWidth <= 0 || roiHeight <= 0 ||
+        roiX + roiWidth > imageWidth || roiY + roiHeight > imageHeight) {
+        printf("Invalid ROI dimensions\n");
+        return;
     }
-
-    // Initialize disparity map to zero
-    memset(disparity_map, 0, width * height);
-
-    // Loop over each pixel in the image
-    for (size_t y = BLOCK_SIZE; y < height - BLOCK_SIZE; y++) {
-        for (size_t x = BLOCK_SIZE; x < width - BLOCK_SIZE; x++) {
-            int min_ssd = INT_MAX;
-            int best_disparity = 0;
-
-            // Search for the best disparity within the max range
-            for (int d = 0; d < MAX_DISPARITY; d++) {
-                int ssd = 0;  // Sum of Squared Differences
-
-                // Ensure we don't go out of bounds on the right frame
-                if (x - d < 0) {
-                    break;
-                }
-
-                // Calculate the Sum of Squared Differences (SSD) for the block
-                for (int v = -BLOCK_SIZE; v <= BLOCK_SIZE; v++) {
-                    for (int u = -BLOCK_SIZE; u <= BLOCK_SIZE; u++) {
-                        int left_pixel = left_frame[(y + v) * width + (x + u)];
-                        int right_pixel = right_frame[(y + v) * width + (x + u - d)];
-                        int diff = left_pixel - right_pixel;
-                        ssd += diff * diff;
-                    }
-                }
-
-                // Find the disparity with the minimum SSD
-                if (ssd < min_ssd) {
-                    min_ssd = ssd;
-                    best_disparity = d;
+    
+    // Loop through each pixel in the ROI
+    for (y = roiY; y < roiY + roiHeight; y++) {
+        for (x = roiX; x < roiX + roiWidth; x++) {
+            // Initialize minimum cost and best disparity
+            int minCost = 255 * 255; // Assuming maximum pixel value is 255
+            int bestDisparity = 0;
+            
+            // Loop through possible disparities
+            for (d = 0; d < maxDisparity; d++) {
+                // Ensure that the comparison does not go out of image bounds
+                if (x - d < 0) break;
+                
+                // Compute the cost (absolute difference) between pixels
+                int cost = abs(leftImage[y * imageWidth + x] - rightImage[y * imageWidth + (x - d)]);
+                
+                // Update the minimum cost and best disparity
+                if (cost < minCost) {
+                    minCost = cost;
+                    bestDisparity = d;
                 }
             }
-
-            // Set the disparity value for the current pixel
-            disparity_map[y * width + x] = best_disparity;
+            
+            // Store the best disparity for the current pixel
+            output[y * imageWidth + x] = bestDisparity;
         }
     }
-
-    return disparity_map;
 }
 
 esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
@@ -242,8 +237,17 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
     if(!last_frame) {
         last_frame = esp_timer_get_time();
     }
-    uint8_t *leftImage = (uint8_t *)heap_caps_malloc(1024, MALLOC_CAP_DMA);
-    uint8_t *rightImage = (uint8_t *)heap_caps_malloc(1024, MALLOC_CAP_DMA);
+    // uint8_t *leftImage = (uint8_t *)heap_caps_malloc(1024, MALLOC_CAP_DMA);
+    // uint8_t *rightImage = (uint8_t *)heap_caps_malloc(1024, MALLOC_CAP_DMA);
+
+    // uint8_t *leftImage =  (uint8_t *)malloc(fb->height*fb->width * sizeof(uint8_t));
+    // uint8_t *rightImage = (uint8_t *)malloc(fb->height*fb->width * sizeof(uint8_t));
+    // uint8_t *outImage = (uint8_t *)malloc(fb->height*fb->width * sizeof(uint8_t));
+    // uint8_t imgL[96*96];
+    // uint8_t imgR[96*96];
+    int buf_len = 96*96;
+    uint8_t * imgL = (uint8_t *)malloc(buf_len);
+    uint8_t * imgR = (uint8_t *)malloc(buf_len);
 
     res = httpd_resp_set_type(req, _STREAM_CONTENT_TYPE);
     if(res != ESP_OK){
@@ -251,29 +255,21 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
     }
 
     while(true){
+        rCam(0);
         fb = esp_camera_fb_get();
-        // copy_frame_buffer(fb->buf,rightImage,fb->len);
-        // esp_camera_fb_return(fb);
-        // lCam(5);
-        // fb = esp_camera_fb_get();
-        // copy_frame_buffer(fb->buf,leftImage,fb->len);
-        // rCam(5);
-        // fb->buf= calculate_disparity_map(rightImage,leftImage,fb->width,fb->height);
+        copy_frame_buffer(fb,imgR,buf_len);
+        esp_camera_fb_return(fb);
+        
+        lCam(0);
+        fb = esp_camera_fb_get();
+        copy_frame_buffer(fb,imgL,buf_len);
+        // copy_frame_buffer_man(fb,imgL,fb->len);
+        // computeDisparity(leftImage,rightImage,outImage,fb->width,fb->height,40,20,60,40,10);
+        
+        // copy_frame_buffer(outImage,fb->buf,fb->len);    
+        
         // log_frame_data(fb->buf,fb->width,fb->height);
         
-
-        // xTaskCreatePinnedToCore(binary_sketcher_task,"binary_sketcher",2048,fb,1,NULL,1);
-        // while(!xSemaphoreTake(xBinarySemaphore,portMAX_DELAY))
-        // {
-
-        // }
-        // draw_bounding_box(fb,45,45,20,20);
-        //  binary_sketcher_on_roi(fb, 10,10,80,80);
-        // swap(10);
-        // fbt = esp_camera_fb_get();
-        // swap(10);
-        // fb = calculate_depth_map(fb,fbt);
-        // esp_camera_fb_return(fbt);
 
         if (!fb) {
             ESP_LOGE(TAG, "Camera capture failed");
@@ -283,8 +279,9 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
         
         if(fb->format != PIXFORMAT_JPEG){
             // swap(0);
-            ESP_LOGI(TAG, "State = %d",state);
-            bool jpeg_converted = frame2jpg(fb, 80, &_jpg_buf, &_jpg_buf_len);
+            // ESP_LOGI(TAG, "State = %d",state);
+            // bool jpeg_converted = frame2jpg(fb, 80, &_jpg_buf, &_jpg_buf_len);
+            bool jpeg_converted= fmt2jpg(imgR, fb->len, fb->width, fb->height, fb->format, 80, &_jpg_buf, &_jpg_buf_len);
             if(!jpeg_converted){
                 ESP_LOGE(TAG, "JPEG compression failed");
                 esp_camera_fb_return(fb);
