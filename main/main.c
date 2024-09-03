@@ -108,7 +108,7 @@ static esp_err_t init_camera(void)
 
         .xclk_freq_hz = CONFIG_XCLK_FREQ,
 
-        .frame_size = FRAMESIZE_96X96,
+        .frame_size = FRAMESIZE_QQVGA,
         .pixel_format = PIXFORMAT_GRAYSCALE,
         // .fb_location = CAMERA_FB_IN_PSRAM,
         .fb_location = CAMERA_FB_IN_DRAM,
@@ -203,13 +203,13 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
         last_frame = esp_timer_get_time();
     }
 
-    int buf_len = 96*96;
+    int buf_len = 176*144;
     uint8_t * imgL = (uint8_t *)malloc(buf_len);
     uint8_t * imgR = (uint8_t *)malloc(buf_len);
     uint8_t * disparity = (uint8_t *)malloc(buf_len);
-    int img_width = 96;   
-    int img_height = 96;  
-    int max_disparity = 8; 
+    int img_width = 160;   
+    int img_height = 120;  
+    int max_disparity = 12; 
 
     DisparityTaskParams *params=(DisparityTaskParams *)malloc(sizeof(DisparityTaskParams));
     params->imgL = imgL;
