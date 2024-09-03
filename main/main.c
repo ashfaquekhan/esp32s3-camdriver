@@ -209,7 +209,7 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
     uint8_t * disparity = (uint8_t *)malloc(buf_len);
     int img_width = 96;   
     int img_height = 96;  
-    int max_disparity = 20; 
+    int max_disparity = 8; 
 
     DisparityTaskParams *params=(DisparityTaskParams *)malloc(sizeof(DisparityTaskParams));
     params->imgL = imgL;
