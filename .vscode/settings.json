@@ -26,6 +26,7 @@
         "ledc.h": "c",
         "sdkconfig.h": "c",
         "string": "cpp",
-        "type_traits": "c"
+        "type_traits": "c",
+        "esp_heap_caps.h": "c"
     }
 }
