@@ -43,10 +43,10 @@ static const char* _STREAM_PART = "Content-Type: image/jpeg\r\nContent-Length: %
 
 #define CONFIG_XCLK_FREQ 20000000  //20000000 / 8000000
 
-#define MAX_DISPARITY 1
+#define MAX_DISPARITY 2
 #define BLOCK_SIZE 5
 
-#define THRESHOLD 64 
+#define THRESHOLD 40 
 
 void binary_sketcher_on_roi(camera_fb_t *frame, size_t x, size_t y, size_t roi_width, size_t roi_height) {
     if (!frame || !frame->buf) {
@@ -82,6 +82,16 @@ void binary_sketcher_on_roi(camera_fb_t *frame, size_t x, size_t y, size_t roi_w
             }
         }
     }
+}
+
+SemaphoreHandle_t xBinarySemaphore;
+
+void binary_sketcher_task(void *arg) 
+{
+    // camera_fb_t *fb = (camera_fb_t *)arg;
+    binary_sketcher_on_roi((camera_fb_t *)arg, 40, 20, 80, 60);
+    xSemaphoreGive(xBinarySemaphore);
+    vTaskDelete(NULL);
 }
 
 void draw_bounding_box(camera_fb_t *frame, size_t x, size_t y, size_t box_width, size_t box_height) {
@@ -128,69 +138,6 @@ void draw_bounding_box(camera_fb_t *frame, size_t x, size_t y, size_t box_width,
     }
 }
 
-camera_fb_t* calculate_depth_map(camera_fb_t *left_frame, camera_fb_t *right_frame) {
-    // Check if the input frames have the same dimensions
-    if (left_frame->width != right_frame->width || left_frame->height != right_frame->height) {
-        return NULL; // Return NULL if dimensions don't match
-    }
-
-    size_t width = left_frame->width;
-    size_t height = left_frame->height;
-
-    // Allocate memory for the depth frame
-    camera_fb_t *depth_frame = NULL;
-    // if (!depth_frame) {
-    //     return NULL; // Memory allocation failed
-    // }
-
-    depth_frame->width = width;
-    depth_frame->height = height;
-    depth_frame->len = width * height; // Depth map will be a grayscale image
-    depth_frame->format = left_frame->format; // Assuming the same format for depth map
-    depth_frame->buf = (uint8_t *)malloc(depth_frame->len);
-    if (!depth_frame->buf) {
-        free(depth_frame);
-        return NULL; // Memory allocation failed
-    }
-
-    // Initialize depth map to zero
-    memset(depth_frame->buf, 0, depth_frame->len);
-
-    // Simple block matching for disparity calculation
-    for (size_t y = BLOCK_SIZE; y < height - BLOCK_SIZE; ++y) {
-        for (size_t x = BLOCK_SIZE; x < width - BLOCK_SIZE; ++x) {
-            int best_disparity = 0;
-            int min_ssd = INT_MAX;
-
-            for (int d = 0; d < MAX_DISPARITY; ++d) {
-                int ssd = 0;
-
-                // Sum of squared differences (SSD) within the block
-                for (int ky = -BLOCK_SIZE / 2; ky <= BLOCK_SIZE / 2; ++ky) {
-                    for (int kx = -BLOCK_SIZE / 2; kx <= BLOCK_SIZE / 2; ++kx) {
-                        int left_index = (y + ky) * width + (x + kx);
-                        int right_index = (y + ky) * width + (x + kx - d);
-                        if (0 < (x + kx - d) && (x + kx - d) < width) {
-                            int diff = left_frame->buf[left_index] - right_frame->buf[right_index];
-                            ssd += diff * diff;
-                        }
-                    }
-                }
-
-                // Update best disparity if a lower SSD is found
-                if (ssd < min_ssd) {
-                    min_ssd = ssd;
-                    best_disparity = d;
-                }
-            }
-
-            // Store the best disparity in the depth map
-            depth_frame->buf[y * width + x] = (uint8_t)best_disparity;
-        }
-    }
-    return depth_frame;
-}
-
 static esp_err_t init_camera(void)
 {
     camera_config_t camera_config = {
@@ -217,7 +164,7 @@ static esp_err_t init_camera(void)
 
         .xclk_freq_hz = CONFIG_XCLK_FREQ,
 
-        .frame_size = FRAMESIZE_96X96,
+        .frame_size = FRAMESIZE_QQVGA,
         .pixel_format = PIXFORMAT_GRAYSCALE,
         // .fb_location = CAMERA_FB_IN_PSRAM,
         .fb_location = CAMERA_FB_IN_DRAM,
@@ -264,9 +211,13 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
 
     while(true){
         fb = esp_camera_fb_get();
+        xTaskCreatePinnedToCore(binary_sketcher_task,"binary_sketcher",2048,fb,1,NULL,1);
+        while(!xSemaphoreTake(xBinarySemaphore,portMAX_DELAY))
+        {
 
+        }
         // draw_bounding_box(fb,45,45,20,20);
-         binary_sketcher_on_roi(fb, 10,10,80,80);
+        //  binary_sketcher_on_roi(fb, 10,10,80,80);
         // swap(10);
         // fbt = esp_camera_fb_get();
         // swap(10);
@@ -281,7 +232,7 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
         
         if(fb->format != PIXFORMAT_JPEG){
             swap(0);
-            bool jpeg_converted = frame2jpg(fb, 80, &_jpg_buf, &_jpg_buf_len);
+            bool jpeg_converted = frame2jpg(fb, 50, &_jpg_buf, &_jpg_buf_len);
             if(!jpeg_converted){
                 ESP_LOGE(TAG, "JPEG compression failed");
                 esp_camera_fb_return(fb);
@@ -289,6 +240,7 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
             }
         } 
         else {
+            swap(0);
             _jpg_buf_len = fb->len;
             _jpg_buf = fb->buf;
         }
@@ -344,6 +296,13 @@ httpd_handle_t setup_server(void)
 
 void app_main()
 {
+    // Create the binary semaphore
+    xBinarySemaphore = xSemaphoreCreateBinary();
+    if (xBinarySemaphore == NULL) {
+        // Semaphore creation failed
+        return;
+    }
+
     swapInit();
     esp_err_t err;
 
