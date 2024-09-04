@@ -108,7 +108,7 @@ static esp_err_t init_camera(void)
 
         .xclk_freq_hz = CONFIG_XCLK_FREQ,
 
-        .frame_size = FRAMESIZE_96X96,
+        .frame_size = FRAMESIZE_QQVGA,
         .pixel_format = PIXFORMAT_GRAYSCALE,
         // .fb_location = CAMERA_FB_IN_PSRAM,
         .fb_location = CAMERA_FB_IN_DRAM,
@@ -209,10 +209,10 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
         last_frame = esp_timer_get_time();
     }
 
-    int img_width = 96;   
-    int img_height = 96;  
-    int max_disparity = 8; 
-    int block_size= 3;
+    int img_width = 160;   
+    int img_height = 120;  
+    int max_disparity = 4; 
+    int block_size=1;
     int buf_len = img_width * img_height;
     uint8_t * imgL = (uint8_t *)malloc(buf_len);
     uint8_t * imgR = (uint8_t *)malloc(buf_len);
@@ -235,13 +235,14 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
     }
 
     while(true){
-        rCam(1);
+        
         fb = esp_camera_fb_get();
+        lCam(1);
         copy_frame_buffer(fb,imgR,buf_len);
         esp_camera_fb_return(fb);
         
-        lCam(1);
         fb = esp_camera_fb_get();
+        rCam(1);
         copy_frame_buffer(fb,imgL,buf_len);
         esp_camera_fb_return(fb);
         
