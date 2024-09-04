@@ -108,7 +108,7 @@ static esp_err_t init_camera(void)
 
         .xclk_freq_hz = CONFIG_XCLK_FREQ,
 
-        .frame_size = FRAMESIZE_QQVGA,
+        .frame_size = FRAMESIZE_96X96,
         .pixel_format = PIXFORMAT_GRAYSCALE,
         // .fb_location = CAMERA_FB_IN_PSRAM,
         .fb_location = CAMERA_FB_IN_DRAM,
@@ -138,55 +138,61 @@ typedef struct {
     uint8_t *imgL;             // Pointer to left image
     uint8_t *imgR;             // Pointer to right image
     uint8_t *disparity;        // Pointer to disparity map
+    int buf_len;
     int img_width;             // Width of the images
     int img_height;            // Height of the images
     int max_disparity;         // Maximum disparity
+    int block_size;
 } DisparityTaskParams;
 
-void calculate_disparity(uint8_t* imgL, uint8_t* imgR, uint8_t* disparity, int width, int height, int max_disparity) {
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
-            int min_ssd = INT_MAX;  // Initialize with a large value
+void calculate_disparity(uint8_t* imgL, uint8_t* imgR, uint8_t* disparity, int width, int height, int max_disparity, int block_size) {
+    int half_block = block_size / 2;
+
+    // Initialize disparity map to zero
+    memset(disparity, 0, width * height * sizeof(uint8_t));
+
+    for (int y = half_block; y < height - half_block; y++) {
+        for (int x = half_block; x < width - half_block; x++) {
+            int min_ssd = INT_MAX;
             int best_disparity = 0;
 
-            // Search range for disparity
             for (int d = 0; d < max_disparity; d++) {
-                int ssd = 0;  // Sum of Squared Differences
+                int ssd = 0;
 
-                // Calculate SSD between blocks in left and right images
-                for (int j = -1; j <= 1; j++) {
-                    for (int i = -1; i <= 1; i++) {
-                        int l_x = x + i;
-                        int l_y = y + j;
-                        int r_x = x + i - d;
-
-                        // Check bounds
-                        if (l_x >= 0 && l_x < width && l_y >= 0 && l_y < height && r_x >= 0 && r_x < width) {
-                            int diff = imgL[l_y * width + l_x] - imgR[l_y * width + r_x];
-                            ssd += diff * diff;
-                        }
+                for (int v = -half_block; v <= half_block; v++) {
+                    for (int u = -half_block; u <= half_block; u++) {
+                        int left_pixel = imgL[(y + v) * width + (x + u)];
+                        int right_pixel = (x + u - d >= 0) ? imgR[(y + v) * width + (x + u - d)] : 0;
+                        int diff = left_pixel - right_pixel;
+                        ssd += diff * diff;
                     }
                 }
 
-                // Update best disparity
                 if (ssd < min_ssd) {
                     min_ssd = ssd;
                     best_disparity = d;
                 }
             }
 
-            // Store the best disparity
-            disparity[y * width + x] = (uint8_t)best_disparity;
+            disparity[y * width + x] = (uint8_t)(best_disparity * 255 / max_disparity);
         }
     }
 }
 
+    size_t _jpg_buf_len;
+    uint8_t * _jpg_buf;
 SemaphoreHandle_t xDisparitySemaphore;
 // Function to be run as a task
 void disparity_task(void* arg) {
     // Assuming imgL, imgR, and disparity are globally defined
     DisparityTaskParams *params = (DisparityTaskParams *)arg;
-    calculate_disparity(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity);
+    calculate_disparity(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity,params->block_size);
+    bool jpeg_converted= fmt2jpg(params->disparity,params->buf_len, params->img_width, params->img_height, PIXFORMAT_GRAYSCALE, 80, &_jpg_buf, &_jpg_buf_len);
+    if(!jpeg_converted){
+        ESP_LOGE(TAG, "JPEG compression failed");
+        // esp_camera_fb_return(fb);
+        // res = ESP_FAIL;
+    }
     xSemaphoreGive(xDisparitySemaphore);
     vTaskDelete(NULL);
 }
@@ -195,29 +201,33 @@ void disparity_task(void* arg) {
 esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
     camera_fb_t * fb = NULL;
     esp_err_t res = ESP_OK;
-    size_t _jpg_buf_len;
-    uint8_t * _jpg_buf;
+    // size_t _jpg_buf_len;
+    // uint8_t * _jpg_buf;
     char * part_buf[64];
     static int64_t last_frame = 0;
     if(!last_frame) {
         last_frame = esp_timer_get_time();
     }
 
-    int buf_len = 176*144;
+    int img_width = 96;   
+    int img_height = 96;  
+    int max_disparity = 8; 
+    int block_size= 3;
+    int buf_len = img_width * img_height;
     uint8_t * imgL = (uint8_t *)malloc(buf_len);
     uint8_t * imgR = (uint8_t *)malloc(buf_len);
     uint8_t * disparity = (uint8_t *)malloc(buf_len);
-    int img_width = 160;   
-    int img_height = 120;  
-    int max_disparity = 12; 
 
     DisparityTaskParams *params=(DisparityTaskParams *)malloc(sizeof(DisparityTaskParams));
     params->imgL = imgL;
     params->imgR = imgR;
+    params->buf_len= buf_len;
     params->disparity = disparity;
     params->img_width = img_width;
     params->img_height = img_height;
     params->max_disparity = max_disparity;
+    params->block_size =block_size;
+
 
     res = httpd_resp_set_type(req, _STREAM_CONTENT_TYPE);
     if(res != ESP_OK){
@@ -234,7 +244,9 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
         fb = esp_camera_fb_get();
         copy_frame_buffer(fb,imgL,buf_len);
         esp_camera_fb_return(fb);
+        
         xTaskCreatePinnedToCore(disparity_task, "Disparity Task", 4096, (void *)params, 1, NULL, 1);
+        
         while(xSemaphoreTake(xDisparitySemaphore,portMAX_DELAY) ==pdFALSE){}
         
 
@@ -244,23 +256,6 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
             break;
         }
         
-        if(fb->format != PIXFORMAT_JPEG){
-            // swap(0);
-            // ESP_LOGI(TAG, "State = %d",state);
-            // bool jpeg_converted = frame2jpg(fb, 80, &_jpg_buf, &_jpg_buf_len);
-            bool jpeg_converted= fmt2jpg(disparity, buf_len, img_width, img_height, PIXFORMAT_GRAYSCALE, 80, &_jpg_buf, &_jpg_buf_len);
-            if(!jpeg_converted){
-                ESP_LOGE(TAG, "JPEG compression failed");
-                // esp_camera_fb_return(fb);
-                // res = ESP_FAIL;
-            }
-        } 
-        else {
-            
-            _jpg_buf_len = fb->len;
-            _jpg_buf = fb->buf;
-        }
-
         if(res == ESP_OK){
             res = httpd_resp_send_chunk(req, _STREAM_BOUNDARY, strlen(_STREAM_BOUNDARY));
         }
@@ -275,8 +270,7 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
         if(fb->format != PIXFORMAT_JPEG){
             free(_jpg_buf);
         }
-        // esp_camera_fb_return(fb);
-        // esp_camera_fb_return(fbt);
+
         if(res != ESP_OK){
             break;
         }
