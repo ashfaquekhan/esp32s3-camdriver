@@ -108,7 +108,7 @@ static esp_err_t init_camera(void)
 
         .xclk_freq_hz = CONFIG_XCLK_FREQ,
 
-        .frame_size = FRAMESIZE_QQVGA,
+        .frame_size = FRAMESIZE_96X96,
         .pixel_format = PIXFORMAT_GRAYSCALE,
         // .fb_location = CAMERA_FB_IN_PSRAM,
         .fb_location = CAMERA_FB_IN_DRAM,
@@ -134,6 +134,41 @@ static esp_err_t init_camera(void)
     return ESP_OK;
 
 }
+void apply_median_filter(uint8_t* disparity, int width, int height, int kernel_size) {
+    int half_k = kernel_size / 2;
+    uint8_t* temp = (uint8_t*)malloc(width * height * sizeof(uint8_t));
+
+    for (int y = half_k; y < height - half_k; y++) {
+        for (int x = half_k; x < width - half_k; x++) {
+            int window[kernel_size * kernel_size];
+            int count = 0;
+
+            for (int v = -half_k; v <= half_k; v++) {
+                for (int u = -half_k; u <= half_k; u++) {
+                    window[count++] = disparity[(y + v) * width + (x + u)];
+                }
+            }
+
+            // Sort the window
+            for (int i = 0; i < count - 1; i++) {
+                for (int j = i + 1; j < count; j++) {
+                    if (window[i] > window[j]) {
+                        int temp = window[i];
+                        window[i] = window[j];
+                        window[j] = temp;
+                    }
+                }
+            }
+
+            // Assign the median value to the current pixel
+            temp[y * width + x] = window[count / 2];
+        }
+    }
+
+    memcpy(disparity, temp, width * height * sizeof(uint8_t));
+    free(temp);
+}
+
 typedef struct {
     uint8_t *imgL;             // Pointer to left image
     uint8_t *imgR;             // Pointer to right image
@@ -186,8 +221,12 @@ SemaphoreHandle_t xDisparitySemaphore;
 void disparity_task(void* arg) {
     // Assuming imgL, imgR, and disparity are globally defined
     DisparityTaskParams *params = (DisparityTaskParams *)arg;
+    
     calculate_disparity(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity,params->block_size);
+
+    // apply_median_filter(params->disparity,params->img_width,params->img_height,4);
     bool jpeg_converted= fmt2jpg(params->disparity,params->buf_len, params->img_width, params->img_height, PIXFORMAT_GRAYSCALE, 80, &_jpg_buf, &_jpg_buf_len);
+    
     if(!jpeg_converted){
         ESP_LOGE(TAG, "JPEG compression failed");
         // esp_camera_fb_return(fb);
@@ -209,10 +248,10 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
         last_frame = esp_timer_get_time();
     }
 
-    int img_width = 160;   
-    int img_height = 120;  
-    int max_disparity = 4; 
-    int block_size=1;
+    int img_width = 96;   
+    int img_height = 96;  
+    int max_disparity = 45;//5/6
+    int block_size=5; //1
     int buf_len = img_width * img_height;
     uint8_t * imgL = (uint8_t *)malloc(buf_len);
     uint8_t * imgR = (uint8_t *)malloc(buf_len);
