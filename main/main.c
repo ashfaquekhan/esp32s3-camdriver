@@ -134,40 +134,6 @@ static esp_err_t init_camera(void)
     return ESP_OK;
 
 }
-void apply_median_filter(uint8_t* disparity, int width, int height, int kernel_size) {
-    int half_k = kernel_size / 2;
-    uint8_t* temp = (uint8_t*)malloc(width * height * sizeof(uint8_t));
-
-    for (int y = half_k; y < height - half_k; y++) {
-        for (int x = half_k; x < width - half_k; x++) {
-            int window[kernel_size * kernel_size];
-            int count = 0;
-
-            for (int v = -half_k; v <= half_k; v++) {
-                for (int u = -half_k; u <= half_k; u++) {
-                    window[count++] = disparity[(y + v) * width + (x + u)];
-                }
-            }
-
-            // Sort the window
-            for (int i = 0; i < count - 1; i++) {
-                for (int j = i + 1; j < count; j++) {
-                    if (window[i] > window[j]) {
-                        int temp = window[i];
-                        window[i] = window[j];
-                        window[j] = temp;
-                    }
-                }
-            }
-
-            // Assign the median value to the current pixel
-            temp[y * width + x] = window[count / 2];
-        }
-    }
-
-    memcpy(disparity, temp, width * height * sizeof(uint8_t));
-    free(temp);
-}
 
 typedef struct {
     uint8_t *imgL;             // Pointer to left image
@@ -178,9 +144,13 @@ typedef struct {
     int img_height;            // Height of the images
     int max_disparity;         // Maximum disparity
     int block_size;
+    int jump_factor;
 } DisparityTaskParams;
 
-void calculate_disparity(uint8_t* imgL, uint8_t* imgR, uint8_t* disparity, int width, int height, int max_disparity, int block_size) {
+
+
+
+void calculate_disparity(uint8_t* imgL, uint8_t* imgR, uint8_t* disparity, int width, int height, int max_disparity, int block_size, int jump_factor) {
     int half_block = block_size / 2;
 
     // Initialize disparity map to zero
@@ -191,7 +161,8 @@ void calculate_disparity(uint8_t* imgL, uint8_t* imgR, uint8_t* disparity, int w
             int min_ssd = INT_MAX;
             int best_disparity = 0;
 
-            for (int d = 0; d < max_disparity; d++) {
+            // Loop through disparities with the jump factor
+            for (int d = 0; d < max_disparity; d += jump_factor) {
                 int ssd = 0;
 
                 for (int v = -half_block; v <= half_block; v++) {
@@ -209,10 +180,48 @@ void calculate_disparity(uint8_t* imgL, uint8_t* imgR, uint8_t* disparity, int w
                 }
             }
 
-            disparity[y * width + x] = (uint8_t)(best_disparity * 255 / max_disparity);
+            // Only update disparity map if the best disparity is within a close range
+            if (best_disparity > 0) {
+                disparity[y * width + x] = (uint8_t)(best_disparity * 255 / max_disparity);
+            }
         }
     }
 }
+
+
+// void calculate_disparity(uint8_t* imgL, uint8_t* imgR, uint8_t* disparity, int width, int height, int max_disparity, int block_size) {
+//     int half_block = block_size / 2;
+
+//     // Initialize disparity map to zero
+//     memset(disparity, 0, width * height * sizeof(uint8_t));
+
+//     for (int y = half_block; y < height - half_block; y++) {
+//         for (int x = half_block; x < width - half_block; x++) {
+//             int min_ssd = INT_MAX;
+//             int best_disparity = 0;
+
+//             for (int d = 0; d < max_disparity; d++) {
+//                 int ssd = 0;
+
+//                 for (int v = -half_block; v <= half_block; v++) {
+//                     for (int u = -half_block; u <= half_block; u++) {
+//                         int left_pixel = imgL[(y + v) * width + (x + u)];
+//                         int right_pixel = (x + u - d >= 0) ? imgR[(y + v) * width + (x + u - d)] : 0;
+//                         int diff = left_pixel - right_pixel;
+//                         ssd += diff * diff;
+//                     }
+//                 }
+
+//                 if (ssd < min_ssd) {
+//                     min_ssd = ssd;
+//                     best_disparity = d;
+//                 }
+//             }
+
+//             disparity[y * width + x] = (uint8_t)(best_disparity * 255 / max_disparity);
+//         }
+//     }
+// }
 
     size_t _jpg_buf_len;
     uint8_t * _jpg_buf;
@@ -222,9 +231,8 @@ void disparity_task(void* arg) {
     // Assuming imgL, imgR, and disparity are globally defined
     DisparityTaskParams *params = (DisparityTaskParams *)arg;
     
-    calculate_disparity(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity,params->block_size);
+    calculate_disparity(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity,params->block_size,params->jump_factor);
 
-    // apply_median_filter(params->disparity,params->img_width,params->img_height,4);
     bool jpeg_converted= fmt2jpg(params->disparity,params->buf_len, params->img_width, params->img_height, PIXFORMAT_GRAYSCALE, 80, &_jpg_buf, &_jpg_buf_len);
     
     if(!jpeg_converted){
@@ -250,12 +258,13 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
 
     int img_width = 96;   
     int img_height = 96;  
-    int max_disparity = 45;//5/6
-    int block_size=5; //1
+    int max_disparity = 48;//5/6
+    int block_size=4; //1
+    int jump_factor = 36;
     int buf_len = img_width * img_height;
     uint8_t * imgL = (uint8_t *)malloc(buf_len);
     uint8_t * imgR = (uint8_t *)malloc(buf_len);
-    uint8_t * disparity = (uint8_t *)malloc(buf_len);
+    uint8_t * disparity = (uint8_t *)malloc(buf_len);   
 
     DisparityTaskParams *params=(DisparityTaskParams *)malloc(sizeof(DisparityTaskParams));
     params->imgL = imgL;
@@ -266,7 +275,7 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
     params->img_height = img_height;
     params->max_disparity = max_disparity;
     params->block_size =block_size;
-
+    params->jump_factor= jump_factor;
 
     res = httpd_resp_set_type(req, _STREAM_CONTENT_TYPE);
     if(res != ESP_OK){
