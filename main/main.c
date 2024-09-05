@@ -259,8 +259,8 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
     int img_width = 96;   
     int img_height = 96;  
     int max_disparity = 48;//5/6
-    int block_size=4; //1
-    int jump_factor = 36;
+    int block_size=1; //1
+    int jump_factor = 46;
     int buf_len = img_width * img_height;
     uint8_t * imgL = (uint8_t *)malloc(buf_len);
     uint8_t * imgR = (uint8_t *)malloc(buf_len);
