@@ -234,7 +234,7 @@ void calculate_disparity(uint8_t* imgL, uint8_t* imgR, uint8_t* disparity, int w
             int best_disparity = 0;
 
             // Compare pixel-by-pixel along the epipolar line
-            for (int d = 0; d < max_disparity; d+=40) {
+            for (int d = 0; d < max_disparity; d++) {
                 int ssd = 0;
 
                 int left_pixel = imgL[y * width + x];
