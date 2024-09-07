@@ -145,11 +145,14 @@ typedef struct {
     int max_disparity;         // Maximum disparity
     int block_size;
     int jump_factor;
+    float fx;             //focal length
+    float baseline;       //distance between sensors
+    float units;          //depth unit 
 } DisparityTaskParams;
 
 
 
-// Block Jumping
+
 // void calculate_disparity(uint8_t* imgL, uint8_t* imgR, uint8_t* disparity, int width, int height, int max_disparity, int block_size, int jump_factor) {
 //     int half_block = block_size / 2;
 
@@ -188,7 +191,7 @@ typedef struct {
 //     }
 // }
 
-// General
+
 // void calculate_disparity(uint8_t* imgL, uint8_t* imgR, uint8_t* disparity, int width, int height, int max_disparity, int block_size) {
 //     int half_block = block_size / 2;
 
@@ -200,7 +203,7 @@ typedef struct {
 //             int min_ssd = INT_MAX;
 //             int best_disparity = 0;
 
-//             for (int d = 0; d < max_disparity; d++) {
+//             for (int d = 0; d < max_disparity; d+=40) {
 //                 int ssd = 0;
 
 //                 for (int v = -half_block; v <= half_block; v++) {
@@ -222,26 +225,46 @@ typedef struct {
 //         }
 //     }
 // }
+// #define min(a, b) ((a) < (b) ? (a) : (b))
+// #define max(a, b) ((a) > (b) ? (a) : (b))
 
-//No-Block-Average
-void calculate_disparity(uint8_t* imgL, uint8_t* imgR, uint8_t* disparity, int width, int height, int max_disparity) {
+
+
+void convert_disparity_to_depth(uint8_t* disparity, float* depth, int width, int height, float fx, float baseline, float units) {
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            int disp = disparity[y * width + x];
+            if (disp > 0) {
+                depth[y * width + x] = (fx * baseline) / (units * disp);
+            } else {
+                depth[y * width + x] = 0.0f;  // Handle zero disparity case
+            }
+        }
+    }
+}
+
+void calculate_disparity(uint8_t* imgL, uint8_t* imgR, uint8_t* disparity, int width, int height, int max_disparity, int block_size, float fx, float baseline, float units) {
     // Initialize disparity map to zero
     memset(disparity, 0, width * height * sizeof(uint8_t));
 
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
+    for (int y = block_size; y < height - block_size - 1; y++) {
+        for (int x = block_size + max_disparity; x < width - block_size - 1; x++) {
             int min_ssd = INT_MAX;
             int best_disparity = 0;
 
-            // Compare pixel-by-pixel along the epipolar line
+            // Compare blocks between left and right images
             for (int d = 0; d < max_disparity; d++) {
                 int ssd = 0;
 
-                int left_pixel = imgL[y * width + x];
-                int right_pixel = (x - d >= 0) ? imgR[y * width + (x - d)] : 0;
+                for (int i = -block_size; i <= block_size; i++) {
+                    for (int j = -block_size; j <= block_size; j++) {
+                        int left_pixel = imgL[(y + i) * width + (x + j)];
+                        int right_pixel = (x - d + j >= 0) ? imgR[(y + i) * width + (x - d + j)] : 0;
 
-                int diff = left_pixel - right_pixel;
-                ssd = diff * diff;  // Sum of squared differences for a single pixel
+                        int diff = left_pixel - right_pixel;
+                        ssd += diff * diff;  // Sum of squared differences for block
+                    }
+                }
 
                 if (ssd < min_ssd) {
                     min_ssd = ssd;
@@ -249,24 +272,56 @@ void calculate_disparity(uint8_t* imgL, uint8_t* imgR, uint8_t* disparity, int w
                 }
             }
 
-            // Store best disparity value scaled to 255 range
+            // Store the best disparity
             disparity[y * width + x] = (uint8_t)(best_disparity * 255 / max_disparity);
         }
     }
 }
+// void calculate_disparity(uint8_t* imgL, uint8_t* imgR, uint8_t* disparity, int width, int height, int max_disparity) {
+//     // Initialize disparity map to zero
+//     memset(disparity, 0, width * height * sizeof(uint8_t));
 
+//     for (int y = 0; y < height; y++) {
+//         for (int x = max_disparity-1; x < width-(max_disparity/2); x++) {
+//             int min_ssd = INT_MAX;
+//             int best_disparity = 0;
 
-size_t _jpg_buf_len;
-uint8_t * _jpg_buf;
+//             // Compare pixels between left and right images
+//             for (int d = 0; d < max_disparity; d++) { 
+//                 int ssd = 0;
+
+//                 int left_pixel = imgL[y * width + x];
+//                 int right_pixel = (x - d >= 0) ? imgR[y * width + (x - d)] : 0;
+
+//                 int diff = left_pixel - right_pixel;
+//                 ssd = diff * diff;  // Sum of squared differences for single pixel
+
+//                 if (ssd < min_ssd) {
+//                     min_ssd = ssd;
+//                     best_disparity = d;
+                
+//             }
+
+//             // Store the best disparity scaled to 255
+//             disparity[y * width + x] = (uint8_t)(best_disparity * 255 / max_disparity);
+//         }
+//     }
+// }
+// }
+
+    size_t _jpg_buf_len;
+    uint8_t * _jpg_buf;
 SemaphoreHandle_t xDisparitySemaphore;
 // Function to be run as a task
 void disparity_task(void* arg) {
     // Assuming imgL, imgR, and disparity are globally defined
     DisparityTaskParams *params = (DisparityTaskParams *)arg;
     
-    //calculate_disparity(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity,params->block_size,params->jump_factor);
-    //calculate_disparity(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity,params->block_size);
-    calculate_disparity(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity);
+
+    calculate_disparity(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity,params->block_size,params->fx,params->baseline,params->units);
+    // calculate_disparity(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity,params->block_size,params->jump_factor);
+    //  calculate_disparity(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity,params->block_size);
+    // calculate_disparity(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity);
 
     bool jpeg_converted= fmt2jpg(params->disparity,params->buf_len, params->img_width, params->img_height, PIXFORMAT_GRAYSCALE, 80, &_jpg_buf, &_jpg_buf_len);
     
@@ -293,10 +348,12 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
 
     int img_width = 96;   
     int img_height = 96;  
-    int max_disparity = 48;//5/6
-    int block_size=1; //1
-    int jump_factor = 2;
+    int max_disparity = 5;//5/6
+    int block_size=2; //1
+    int jump_factor = 46;
     int buf_len = img_width * img_height;
+    int fx=750;
+    int baseline=60;
     uint8_t * imgL = (uint8_t *)malloc(buf_len);
     uint8_t * imgR = (uint8_t *)malloc(buf_len);
     uint8_t * disparity = (uint8_t *)malloc(buf_len);   
@@ -311,6 +368,9 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
     params->max_disparity = max_disparity;
     params->block_size =block_size;
     params->jump_factor= jump_factor;
+    params->fx = fx;
+    params->baseline= baseline;
+    params->units = 0.001;
 
     res = httpd_resp_set_type(req, _STREAM_CONTENT_TYPE);
     if(res != ESP_OK){
