@@ -23,7 +23,26 @@ static const char* _STREAM_PART = "Content-Type: image/jpeg\r\nContent-Length: %
 
 static bool state; //left-0, right=1
 
+void merge_stereo_images(uint8_t* imgL, uint8_t* imgR, uint8_t* merge, int width, int height) {
+    // The merged image width is twice the width of a single image (left + right)
+    int merged_width = 2 * width;
 
+    // Initialize the merged image array to zero (optional)
+    memset(merge, 0, merged_width * height * sizeof(uint8_t));
+
+    // Loop over every pixel row
+    for (int y = 0; y < height; y++) {
+        // Copy the left image pixels
+        for (int x = 0; x < width; x++) {
+            merge[y * merged_width + x] = imgL[y * width + x];
+        }
+
+        // Copy the right image pixels, shifted by the width of the left image
+        for (int x = 0; x < width; x++) {
+            merge[y * merged_width + (x + width)] = imgR[y * width + x];
+        }
+    }
+}
 void rCam(int delay_ms)
 {
     state=1;
@@ -64,7 +83,6 @@ void swapInit()
 
 
 #define CONFIG_XCLK_FREQ 20000000  //20000000 / 8000000
-
 
 
 bool copy_frame_buffer(camera_fb_t *fb, uint8_t *dest_buf, size_t buf_size)
@@ -318,12 +336,12 @@ void disparity_task(void* arg) {
     DisparityTaskParams *params = (DisparityTaskParams *)arg;
     
 
-    calculate_disparity(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity,params->block_size,params->fx,params->baseline,params->units);
+    // calculate_disparity(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity,params->block_size,params->fx,params->baseline,params->units);
     // calculate_disparity(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity,params->block_size,params->jump_factor);
     //  calculate_disparity(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity,params->block_size);
     // calculate_disparity(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity);
-
-    bool jpeg_converted= fmt2jpg(params->disparity,params->buf_len, params->img_width, params->img_height, PIXFORMAT_GRAYSCALE, 80, &_jpg_buf, &_jpg_buf_len);
+    merge_stereo_images(params->imgL,params->imgR,params->disparity,params->img_width,params->img_height);
+    bool jpeg_converted= fmt2jpg(params->disparity,96*2*96, 96 * 2, 96, PIXFORMAT_GRAYSCALE, 100, &_jpg_buf, &_jpg_buf_len);
     
     if(!jpeg_converted){
         ESP_LOGE(TAG, "JPEG compression failed");
@@ -356,7 +374,7 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
     int baseline=60;
     uint8_t * imgL = (uint8_t *)malloc(buf_len);
     uint8_t * imgR = (uint8_t *)malloc(buf_len);
-    uint8_t * disparity = (uint8_t *)malloc(buf_len);   
+    uint8_t * disparity = (uint8_t *)malloc(96*2*96);   
 
     DisparityTaskParams *params=(DisparityTaskParams *)malloc(sizeof(DisparityTaskParams));
     params->imgL = imgL;
