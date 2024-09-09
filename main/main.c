@@ -8,7 +8,7 @@
 #include "esp_timer.h"
 #include "camera_pins.h"
 #include "connect_wifi.h"
-
+#include <math.h>
 #include "esp_heap_caps.h"  // For heap capabilities (DMA-capable memory)
 
 static const char *TAG = "esp32-cam Webserver";
@@ -138,199 +138,125 @@ static esp_err_t init_camera(void)
 typedef struct {
     uint8_t *imgL;             // Pointer to left image
     uint8_t *imgR;             // Pointer to right image
-    uint8_t *disparity;        // Pointer to disparity map
     int buf_len;
     int img_width;             // Width of the images
     int img_height;            // Height of the images
-    int max_disparity;         // Maximum disparity
-    int block_size;
-    int jump_factor;
-    float fx;             //focal length
-    float baseline;       //distance between sensors
-    float units;          //depth unit 
-} DisparityTaskParams;
+    int num_points;
+    int *points_x;
+    int *points_y;
 
+} OpticalFlowParams;
 
+#define WIN_SIZE 3  // Window size for Lucas-Kanade
+#define MAX_INTENSITY 255  // Max grayscale intensity for drawing
 
-
-// void calculate_disparity(uint8_t* imgL, uint8_t* imgR, uint8_t* disparity, int width, int height, int max_disparity, int block_size, int jump_factor) {
-//     int half_block = block_size / 2;
-
-//     // Initialize disparity map to zero
-//     memset(disparity, 0, width * height * sizeof(uint8_t));
-
-//     for (int y = half_block; y < height - half_block; y++) {
-//         for (int x = half_block; x < width - half_block; x++) {
-//             int min_ssd = INT_MAX;
-//             int best_disparity = 0;
-
-//             // Loop through disparities with the jump factor
-//             for (int d = 0; d < max_disparity; d += jump_factor) {
-//                 int ssd = 0;
-
-//                 for (int v = -half_block; v <= half_block; v++) {
-//                     for (int u = -half_block; u <= half_block; u++) {
-//                         int left_pixel = imgL[(y + v) * width + (x + u)];
-//                         int right_pixel = (x + u - d >= 0) ? imgR[(y + v) * width + (x + u - d)] : 0;
-//                         int diff = left_pixel - right_pixel;
-//                         ssd += diff * diff;
-//                     }
-//                 }
-
-//                 if (ssd < min_ssd) {
-//                     min_ssd = ssd;
-//                     best_disparity = d;
-//                 }
-//             }
-
-//             // Only update disparity map if the best disparity is within a close range
-//             if (best_disparity > 0) {
-//                 disparity[y * width + x] = (uint8_t)(best_disparity * 255 / max_disparity);
-//             }
-//         }
-//     }
-// }
-
-
-// void calculate_disparity(uint8_t* imgL, uint8_t* imgR, uint8_t* disparity, int width, int height, int max_disparity, int block_size) {
-//     int half_block = block_size / 2;
-
-//     // Initialize disparity map to zero
-//     memset(disparity, 0, width * height * sizeof(uint8_t));
-
-//     for (int y = half_block; y < height - half_block; y++) {
-//         for (int x = half_block; x < width - half_block; x++) {
-//             int min_ssd = INT_MAX;
-//             int best_disparity = 0;
-
-//             for (int d = 0; d < max_disparity; d+=40) {
-//                 int ssd = 0;
-
-//                 for (int v = -half_block; v <= half_block; v++) {
-//                     for (int u = -half_block; u <= half_block; u++) {
-//                         int left_pixel = imgL[(y + v) * width + (x + u)];
-//                         int right_pixel = (x + u - d >= 0) ? imgR[(y + v) * width + (x + u - d)] : 0;
-//                         int diff = left_pixel - right_pixel;
-//                         ssd += diff * diff;
-//                     }
-//                 }
-
-//                 if (ssd < min_ssd) {
-//                     min_ssd = ssd;
-//                     best_disparity = d;
-//                 }
-//             }
-
-//             disparity[y * width + x] = (uint8_t)(best_disparity * 255 / max_disparity);
-//         }
-//     }
-// }
-// #define min(a, b) ((a) < (b) ? (a) : (b))
-// #define max(a, b) ((a) > (b) ? (a) : (b))
-
-
-
-void convert_disparity_to_depth(uint8_t* disparity, float* depth, int width, int height, float fx, float baseline, float units) {
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
-            int disp = disparity[y * width + x];
-            if (disp > 0) {
-                depth[y * width + x] = (fx * baseline) / (units * disp);
-            } else {
-                depth[y * width + x] = 0.0f;  // Handle zero disparity case
-            }
-        }
+// Function to set a pixel value in the image (ensuring bounds checking)
+void set_pixel(uint8_t *img, int width, int height, int x, int y, uint8_t value) {
+    if (x >= 0 && x < width && y >= 0 && y < height) {
+        img[y * width + x] = value;
     }
 }
 
-void calculate_disparity(uint8_t* imgL, uint8_t* imgR, uint8_t* disparity, int width, int height, int max_disparity, int block_size, float fx, float baseline, float units) {
-    // Initialize disparity map to zero
-    memset(disparity, 0, width * height * sizeof(uint8_t));
+// Basic line drawing function using Bresenham's algorithm to draw optical flow lines
+void draw_line(uint8_t *img, int width, int height, int x0, int y0, int x1, int y1, uint8_t color) {
+    int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+    int dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+    int err = dx + dy, e2;  // error value
 
-    for (int y = block_size; y < height - block_size - 1; y++) {
-        for (int x = block_size + max_disparity; x < width - block_size - 1; x++) {
-            int min_ssd = INT_MAX;
-            int best_disparity = 0;
+    while (1) {
+        set_pixel(img, width, height, x0, y0, color);  // Set pixel color to draw the line
+        if (x0 == x1 && y0 == y1) break;
+        e2 = 2 * err;
+        if (e2 >= dy) { err += dy; x0 += sx; }
+        if (e2 <= dx) { err += dx; y0 += sy; }
+    }
+}
 
-            // Compare blocks between left and right images
-            for (int d = 0; d < max_disparity; d++) {
-                int ssd = 0;
+// Function to calculate optical flow and merge results into the left image
+void calculate_optical_flow_and_merge(uint8_t *imgL, uint8_t *imgR, int width, int height, int num_points, int *points_x, int *points_y) {
+    // Sobel filter kernels for calculating image gradients
+    int Gx[3][3] = {{-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1}};
+    int Gy[3][3] = {{-1, -2, -1}, {0, 0, 0}, {1, 2, 1}};
 
-                for (int i = -block_size; i <= block_size; i++) {
-                    for (int j = -block_size; j <= block_size; j++) {
-                        int left_pixel = imgL[(y + i) * width + (x + j)];
-                        int right_pixel = (x - d + j >= 0) ? imgR[(y + i) * width + (x - d + j)] : 0;
+    for (int p = 0; p < num_points; p++) {
+        int x = points_x[p];
+        int y = points_y[p];
 
-                        int diff = left_pixel - right_pixel;
-                        ssd += diff * diff;  // Sum of squared differences for block
+        // Skip if the point is too close to the border
+        if (x < WIN_SIZE / 2 || x >= width - WIN_SIZE / 2 || y < WIN_SIZE / 2 || y >= height - WIN_SIZE / 2) {
+            continue;
+        }
+
+        // Variables to store summation values for solving the optical flow equations
+        double sum_IxIx = 0, sum_IyIy = 0, sum_IxIy = 0;
+        double sum_IxIt = 0, sum_IyIt = 0;
+
+        // Compute gradients within the window
+        for (int i = -WIN_SIZE / 2; i <= WIN_SIZE / 2; i++) {
+            for (int j = -WIN_SIZE / 2; j <= WIN_SIZE / 2; j++) {
+                int imgX = x + i;
+                int imgY = y + j;
+
+                // Calculate image gradients Ix, Iy using Sobel operators
+                double Ix = 0, Iy = 0;
+                for (int kx = 0; kx < 3; kx++) {
+                    for (int ky = 0; ky < 3; ky++) {
+                        int pixel_x = imgL[(imgY + ky - 1) * width + (imgX + kx - 1)];
+                        Ix += Gx[kx][ky] * pixel_x;
+                        Iy += Gy[kx][ky] * pixel_x;
                     }
                 }
 
-                if (ssd < min_ssd) {
-                    min_ssd = ssd;
-                    best_disparity = d;
-                }
-            }
+                // Calculate It (image intensity difference between imgL and imgR)
+                double It = imgR[imgY * width + imgX] - imgL[imgY * width + imgX];
 
-            // Store the best disparity
-            disparity[y * width + x] = (uint8_t)(best_disparity * 255 / max_disparity);
+                // Update sums for solving the optical flow equations
+                sum_IxIx += Ix * Ix;
+                sum_IyIy += Iy * Iy;
+                sum_IxIy += Ix * Iy;
+                sum_IxIt += Ix * It;
+                sum_IyIt += Iy * It;
+            }
         }
+
+        // Solve the optical flow linear equations:
+        double det = (sum_IxIx * sum_IyIy) - (sum_IxIy * sum_IxIy);
+        int vx = 0, vy = 0;
+        if (fabs(det) > 1e-6) {
+            vx = (int)((sum_IyIy * (-sum_IxIt) - sum_IxIy * (-sum_IyIt)) / det);
+            vy = (int)((sum_IxIx * (-sum_IyIt) - sum_IxIy * (-sum_IxIt)) / det);
+        }
+
+        // Calculate the new position of the point after optical flow
+        int new_x = x + vx;
+        int new_y = y + vy;
+
+        // Draw the optical flow line on the left image
+        draw_line(imgL, width, height, x, y, new_x, new_y, MAX_INTENSITY);  // Draw white line
+
+        // Optionally, mark the new position with a brighter point
+        set_pixel(imgL, width, height, new_x, new_y, MAX_INTENSITY);  // Mark the end point
     }
 }
-// void calculate_disparity(uint8_t* imgL, uint8_t* imgR, uint8_t* disparity, int width, int height, int max_disparity) {
-//     // Initialize disparity map to zero
-//     memset(disparity, 0, width * height * sizeof(uint8_t));
 
-//     for (int y = 0; y < height; y++) {
-//         for (int x = max_disparity-1; x < width-(max_disparity/2); x++) {
-//             int min_ssd = INT_MAX;
-//             int best_disparity = 0;
-
-//             // Compare pixels between left and right images
-//             for (int d = 0; d < max_disparity; d++) { 
-//                 int ssd = 0;
-
-//                 int left_pixel = imgL[y * width + x];
-//                 int right_pixel = (x - d >= 0) ? imgR[y * width + (x - d)] : 0;
-
-//                 int diff = left_pixel - right_pixel;
-//                 ssd = diff * diff;  // Sum of squared differences for single pixel
-
-//                 if (ssd < min_ssd) {
-//                     min_ssd = ssd;
-//                     best_disparity = d;
-                
-//             }
-
-//             // Store the best disparity scaled to 255
-//             disparity[y * width + x] = (uint8_t)(best_disparity * 255 / max_disparity);
-//         }
-//     }
-// }
-// }
-
-    size_t _jpg_buf_len;
-    uint8_t * _jpg_buf;
-SemaphoreHandle_t xDisparitySemaphore;
+size_t _jpg_buf_len;
+uint8_t * _jpg_buf;
+SemaphoreHandle_t xOpticalFlowSemaphore;
 // Function to be run as a task
-void disparity_task(void* arg) {
+void opticalFlow_task(void* arg) {
     // Assuming imgL, imgR, and disparity are globally defined
-    DisparityTaskParams *params = (DisparityTaskParams *)arg;
+    OpticalFlowParams *params = (OpticalFlowParams *)arg;
     
+    calculate_optical_flow_and_merge(params->imgL, params->imgR, params->img_width,params->img_height,params->num_points,params->points_x,params->points_y);
 
-    calculate_disparity(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity,params->block_size,params->fx,params->baseline,params->units);
-    // calculate_disparity(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity,params->block_size,params->jump_factor);
-    //  calculate_disparity(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity,params->block_size);
-    // calculate_disparity(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity);
-
-    bool jpeg_converted= fmt2jpg(params->disparity,params->buf_len, params->img_width, params->img_height, PIXFORMAT_GRAYSCALE, 80, &_jpg_buf, &_jpg_buf_len);
+    bool jpeg_converted= fmt2jpg(params->imgL,params->buf_len, params->img_width, params->img_height, PIXFORMAT_GRAYSCALE, 80, &_jpg_buf, &_jpg_buf_len);
     
     if(!jpeg_converted){
         ESP_LOGE(TAG, "JPEG compression failed");
         // esp_camera_fb_return(fb);
         // res = ESP_FAIL;
     }
-    xSemaphoreGive(xDisparitySemaphore);
+    xSemaphoreGive(xOpticalFlowSemaphore);
     vTaskDelete(NULL);
 }
 
@@ -348,29 +274,26 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
 
     int img_width = 96;   
     int img_height = 96;  
-    int max_disparity = 5;//5/6
-    int block_size=2; //1
-    int jump_factor = 46;
     int buf_len = img_width * img_height;
-    int fx=750;
-    int baseline=60;
     uint8_t * imgL = (uint8_t *)malloc(buf_len);
     uint8_t * imgR = (uint8_t *)malloc(buf_len);
-    uint8_t * disparity = (uint8_t *)malloc(buf_len);   
+    int num_points =10;
+    int points_x[10]= {5,10,15,20,25,30,35,40,45,50};
+    int points_y[10]= {5,10,15,20,25,30,35,40,45,50};
 
-    DisparityTaskParams *params=(DisparityTaskParams *)malloc(sizeof(DisparityTaskParams));
+    // uint8_t * disparity = (uint8_t *)malloc(buf_len);   
+
+    OpticalFlowParams *params=(OpticalFlowParams *)malloc(sizeof(OpticalFlowParams));
     params->imgL = imgL;
     params->imgR = imgR;
     params->buf_len= buf_len;
-    params->disparity = disparity;
     params->img_width = img_width;
     params->img_height = img_height;
-    params->max_disparity = max_disparity;
-    params->block_size =block_size;
-    params->jump_factor= jump_factor;
-    params->fx = fx;
-    params->baseline= baseline;
-    params->units = 0.001;
+    params->num_points = num_points;
+    params->points_x = points_x;
+    params->points_y = points_y;
+
+
 
     res = httpd_resp_set_type(req, _STREAM_CONTENT_TYPE);
     if(res != ESP_OK){
@@ -379,19 +302,19 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
 
     while(true){
         
-        fb = esp_camera_fb_get();
+        // fb = esp_camera_fb_get();
         lCam(1);
-        copy_frame_buffer(fb,imgR,buf_len);
-        esp_camera_fb_return(fb);
+        // copy_frame_buffer(fb,imgR,buf_len);
+        // esp_camera_fb_return(fb);
         
         fb = esp_camera_fb_get();
-        rCam(1);
+        // rCam(1);
         copy_frame_buffer(fb,imgL,buf_len);
         esp_camera_fb_return(fb);
         
-        xTaskCreatePinnedToCore(disparity_task, "Disparity Task", 4096, (void *)params, 1, NULL, 1);
+        xTaskCreatePinnedToCore(opticalFlow_task, "OpticalFlow Task", 4096, (void *)params, 1, NULL, 1);
         
-        while(xSemaphoreTake(xDisparitySemaphore,portMAX_DELAY) ==pdFALSE){}
+        while(xSemaphoreTake(xOpticalFlowSemaphore,portMAX_DELAY) ==pdFALSE){}
         
 
         if (!fb) {
@@ -451,8 +374,8 @@ httpd_handle_t setup_server(void)
 void app_main()
 {
     // Create the binary semaphore
-    xDisparitySemaphore = xSemaphoreCreateBinary();
-    if (xDisparitySemaphore == NULL) {
+    xOpticalFlowSemaphore = xSemaphoreCreateBinary();
+    if (xOpticalFlowSemaphore == NULL) {
         // Semaphore creation failed
         return;
     }
