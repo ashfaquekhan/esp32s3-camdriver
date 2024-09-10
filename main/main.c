@@ -400,7 +400,7 @@ void calculate_disparity_block_half_v2(uint8_t* imgL, uint8_t* imgR, uint8_t* di
     // Initialize disparity map to zero
     memset(disparity, 0, width * height * sizeof(uint8_t));
 
-    int half_width = width / 2;
+    int half_width = width / ;
     int half_block = block_size / 2;
 
     for (int y = half_block; y < height - half_block; y++) {
@@ -435,7 +435,7 @@ void calculate_disparity_block_half(uint8_t* imgL, uint8_t* imgR, uint8_t* dispa
     // Initialize disparity map to zero
     memset(disparity, 0, width * height * sizeof(uint8_t));
 
-    int half_width = width / 3;
+    int half_width = width / 2;
     int half_block = block_size / 2;
 
     for (int y = half_block; y < height - half_block; y++) {
@@ -513,7 +513,7 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
 
     int img_width = 96;   
     int img_height = 96;  
-    int max_disparity = 8;      // 
+    int max_disparity = 24;      // 
     int block_size=4;           //1 
     int jump_factor = 3;
     int buf_len = img_width * img_height;

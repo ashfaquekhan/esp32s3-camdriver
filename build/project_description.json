@@ -1,7 +1,7 @@
 {
     "version":            "1",
     "project_name":       "project-name",
-    "project_version":    "65cab52-dirty",
+    "project_version":    "6310c12-dirty",
     "project_path":       "D:/project-name",
     "idf_path":           "C:/Users/ashfa/esp/v5.0.6/esp-idf",
     "build_dir":          "D:/project-name/build",
