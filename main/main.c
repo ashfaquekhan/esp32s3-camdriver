@@ -308,6 +308,83 @@ void calculate_disparity(uint8_t* imgL, uint8_t* imgR, uint8_t* disparity, int w
 }
 }
 
+void calculate_disparity_half(uint8_t* imgL, uint8_t* imgR, uint8_t* disparity, int width, int height, int max_disparity) {
+    // Initialize disparity map to zero
+    memset(disparity, 0, width * height * sizeof(uint8_t));
+
+    // Start processing from the middle of the images
+    int half_width = width / 2;
+
+    for (int y = 0; y < height; y++) {
+        for (int x = half_width; x < width - max_disparity; x++) {
+            int min_ssd = INT_MAX;
+            int best_disparity = 0;
+
+            // Compare pixels between the right half of the left frame and the left half of the right frame
+            for (int d = 0; d < max_disparity; d++) {
+                int ssd = 0;
+
+                // Left frame: Right half pixels
+                int left_pixel = imgL[y * width + x];
+
+                // Right frame: Left half pixels, shifted by disparity d
+                int right_pixel = (x - half_width - d >= 0) ? imgR[y * width + (x - half_width - d)] : 0;
+
+                // Calculate the sum of squared differences for single pixel
+                int diff = left_pixel - right_pixel;
+                ssd = diff * diff;
+
+                if (ssd < min_ssd) {
+                    min_ssd = ssd;
+                    best_disparity = d;
+                }
+            }
+
+            // Store the best disparity scaled to 255
+            disparity[y * width + x] = (uint8_t)(best_disparity * 255 / max_disparity);
+        }
+    }
+}
+
+void calculate_disparity_block_half(uint8_t* imgL, uint8_t* imgR, uint8_t* disparity, int width, int height, int max_disparity, int block_size) {
+    // Initialize disparity map to zero
+    memset(disparity, 0, width * height * sizeof(uint8_t));
+
+    int half_width = width / 3;
+    int half_block = block_size / 2;
+
+    for (int y = half_block; y < height - half_block; y++) {
+        for (int x = half_width + half_block; x < width - max_disparity - half_block; x++) {
+            int min_ssd = INT_MAX;
+            int best_disparity = 0;
+
+            // Compare blocks between right half of left frame and left half of right frame
+            for (int d = 0; d < max_disparity; d++) {
+                int ssd = 0;
+
+                // Iterate over block of pixels around the current pixel
+                for (int by = -half_block; by <= half_block; by++) {
+                    for (int bx = -half_block; bx <= half_block; bx++) {
+                        int left_pixel = imgL[(y + by) * width + (x + bx)];
+                        int right_pixel = (x - half_width - d + bx >= 0) ? imgR[(y + by) * width + (x - half_width - d + bx)] : 0;
+
+                        int diff = left_pixel - right_pixel;
+                        ssd += diff * diff;  // Accumulate SSD over the block
+                    }
+                }
+
+                if (ssd < min_ssd) {
+                    min_ssd = ssd;
+                    best_disparity = d;
+                }
+            }
+
+            // Store the best disparity scaled to 255
+            disparity[y * width + x] = (uint8_t)(best_disparity * 255 / max_disparity);
+        }
+    }
+}
+
     size_t _jpg_buf_len;
     uint8_t * _jpg_buf;
 SemaphoreHandle_t xDisparitySemaphore;
@@ -318,11 +395,14 @@ void disparity_task(void* arg) {
     
 
     // calculate_disparity_v2(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity,params->block_size,params->fx,params->baseline,params->units);
-    calculate_disparity_jump(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity,params->block_size,params->jump_factor);
+    // calculate_disparity_jump(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity,params->block_size,params->jump_factor);
     // calculate_disparity_block(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity,params->block_size);
     // calculate_disparity(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity);
+    // calculate_disparity_half(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity);
+    calculate_disparity_block_half(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity,params->block_size);
 
     bool jpeg_converted= fmt2jpg(params->disparity,params->buf_len, params->img_width, params->img_height, PIXFORMAT_GRAYSCALE, 80, &_jpg_buf, &_jpg_buf_len);
+     
     
     if(!jpeg_converted){
         ESP_LOGE(TAG, "JPEG compression failed");
@@ -347,8 +427,8 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
 
     int img_width = 96;   
     int img_height = 96;  
-    int max_disparity = 32;      // 
-    int block_size=3;           //1 
+    int max_disparity = 24;      // 
+    int block_size=4;           //1 
     int jump_factor = 3;
     int buf_len = img_width * img_height;
     int fx=750;
@@ -428,6 +508,9 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
     last_frame = 0;
     return res;
 }
+
+
+
 
 httpd_uri_t uri_get = {
     .uri = "/",
