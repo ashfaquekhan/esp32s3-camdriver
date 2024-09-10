@@ -396,11 +396,11 @@ int hamming_distance(uint64_t d1, uint64_t d2) {
 }
 
 // Function to calculate disparity using block matching
-void calculate_disparity_block_half(uint8_t* imgL, uint8_t* imgR, uint8_t* disparity, int width, int height, int max_disparity, int block_size) {
+void calculate_disparity_block_half_v2(uint8_t* imgL, uint8_t* imgR, uint8_t* disparity, int width, int height, int max_disparity, int block_size) {
     // Initialize disparity map to zero
     memset(disparity, 0, width * height * sizeof(uint8_t));
 
-    int half_width = width / 1;
+    int half_width = width / 2;
     int half_block = block_size / 2;
 
     for (int y = half_block; y < height - half_block; y++) {
@@ -431,7 +431,7 @@ void calculate_disparity_block_half(uint8_t* imgL, uint8_t* imgR, uint8_t* dispa
     }
 }
 
-void calculate_disparity_block_half_v2(uint8_t* imgL, uint8_t* imgR, uint8_t* disparity, int width, int height, int max_disparity, int block_size) {
+void calculate_disparity_block_half(uint8_t* imgL, uint8_t* imgR, uint8_t* disparity, int width, int height, int max_disparity, int block_size) {
     // Initialize disparity map to zero
     memset(disparity, 0, width * height * sizeof(uint8_t));
 
@@ -513,7 +513,7 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
 
     int img_width = 96;   
     int img_height = 96;  
-    int max_disparity = 24;      // 
+    int max_disparity = 8;      // 
     int block_size=4;           //1 
     int jump_factor = 3;
     int buf_len = img_width * img_height;
