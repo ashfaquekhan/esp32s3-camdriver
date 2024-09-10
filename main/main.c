@@ -396,10 +396,10 @@ void disparity_task(void* arg) {
 
     // calculate_disparity_v2(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity,params->block_size,params->fx,params->baseline,params->units);
     // calculate_disparity_jump(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity,params->block_size,params->jump_factor);
-    // calculate_disparity_block(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity,params->block_size);
+    calculate_disparity_block(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity,params->block_size);
     // calculate_disparity(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity);
     // calculate_disparity_half(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity);
-    calculate_disparity_block_half(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity,params->block_size);
+    // calculate_disparity_block_half(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity,params->block_size);
 
     bool jpeg_converted= fmt2jpg(params->disparity,params->buf_len, params->img_width, params->img_height, PIXFORMAT_GRAYSCALE, 80, &_jpg_buf, &_jpg_buf_len);
      
