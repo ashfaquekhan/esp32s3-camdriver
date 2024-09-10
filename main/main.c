@@ -357,7 +357,81 @@ void calculate_disparity_half(uint8_t* imgL, uint8_t* imgR, uint8_t* disparity, 
     }
 }
 
+// Function to calculate binary descriptors
+void compute_binary_descriptor(uint8_t* img, int width, int x, int y, int block_size, uint64_t* descriptor) {
+    int half_block = block_size / 2;
+    int threshold = 128; // Threshold value for binary encoding
+
+    *descriptor = 0;
+    int bit_pos = 0;
+
+    for (int by = -half_block; by <= half_block; by++) {
+        for (int bx = -half_block; bx <= half_block; bx++) {
+            int pixel_x = x + bx;
+            int pixel_y = y + by;
+
+            // Boundary check
+            if (pixel_x >= 0 && pixel_x < width && pixel_y >= 0 && pixel_y < width) {
+                int pixel = img[pixel_y * width + pixel_x];
+                uint64_t bit = (pixel > threshold) ? 1 : 0;
+                *descriptor |= (bit << bit_pos);
+            } else {
+                // If outside boundaries, treat as zero (or handle as needed)
+                *descriptor |= (0 << bit_pos);
+            }
+            bit_pos++;
+        }
+    }
+}
+
+// Function to calculate Hamming distance between two descriptors
+int hamming_distance(uint64_t d1, uint64_t d2) {
+    uint64_t x = d1 ^ d2;
+    int dist = 0;
+    while (x) {
+        dist += x & 1;
+        x >>= 1;
+    }
+    return dist;
+}
+
+// Function to calculate disparity using block matching
 void calculate_disparity_block_half(uint8_t* imgL, uint8_t* imgR, uint8_t* disparity, int width, int height, int max_disparity, int block_size) {
+    // Initialize disparity map to zero
+    memset(disparity, 0, width * height * sizeof(uint8_t));
+
+    int half_width = width / 1;
+    int half_block = block_size / 2;
+
+    for (int y = half_block; y < height - half_block; y++) {
+        for (int x = half_width + half_block; x < width - max_disparity - half_block; x++) {
+            int min_hamming = INT_MAX;
+            int best_disparity = 0;
+
+            // Compute binary descriptor for the current block in the left image
+            uint64_t left_descriptor;
+            compute_binary_descriptor(imgL, width, x, y, block_size, &left_descriptor);
+
+            // Compare blocks between the right half of the left frame and the left half of the right frame
+            for (int d = 0; d < max_disparity; d++) {
+                uint64_t right_descriptor;
+                compute_binary_descriptor(imgR, width, x - half_width - d, y, block_size, &right_descriptor);
+
+                int hamming = hamming_distance(left_descriptor, right_descriptor);
+
+                if (hamming < min_hamming) {
+                    min_hamming = hamming;
+                    best_disparity = d;
+                }
+            }
+
+            // Store the best disparity scaled to 255
+            disparity[y * width + x] = (uint8_t)(best_disparity * 255 / max_disparity);
+        }
+    }
+}
+
+void calculate_disparity_block_half_v2(uint8_t* imgL, uint8_t* imgR, uint8_t* disparity, int width, int height, int max_disparity, int block_size) {
     // Initialize disparity map to zero
     memset(disparity, 0, width * height * sizeof(uint8_t));
 
@@ -407,10 +481,11 @@ void disparity_task(void* arg) {
 
     // calculate_disparity_v2(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity,params->block_size,params->fx,params->baseline,params->units);
     // calculate_disparity_jump(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity,params->block_size,params->jump_factor);
-    calculate_disparity_block(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity,params->block_size);
+    // calculate_disparity_block(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity,params->block_size);
     // calculate_disparity(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity);
     // calculate_disparity_half(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity);
     // calculate_disparity_block_half(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity,params->block_size);
+    calculate_disparity_block_half_v2(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity,params->block_size);
 
     bool jpeg_converted= fmt2jpg(params->disparity,params->buf_len, params->img_width, params->img_height, PIXFORMAT_GRAYSCALE, 80, &_jpg_buf, &_jpg_buf_len);
      
