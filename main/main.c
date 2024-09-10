@@ -80,6 +80,17 @@ bool copy_frame_buffer(camera_fb_t *fb, uint8_t *dest_buf, size_t buf_size)
     return true;  // Copy successful
 }
 
+void normalize_image(uint8_t* img, int width, int height) {
+    int min_pixel = 255, max_pixel = 0;
+    for (int i = 0; i < width * height; i++) {
+        if (img[i] < min_pixel) min_pixel = img[i];
+        if (img[i] > max_pixel) max_pixel = img[i];
+    }
+    for (int i = 0; i < width * height; i++) {
+        img[i] = (img[i] - min_pixel) * 255 / (max_pixel - min_pixel);
+    }
+}
+
 
 static esp_err_t init_camera(void)
 {
@@ -461,11 +472,13 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
         fb = esp_camera_fb_get();
         lCam(1);
         copy_frame_buffer(fb,imgR,buf_len);
+        normalize_image(imgR,img_width,img_height);
         esp_camera_fb_return(fb);
         
         fb = esp_camera_fb_get();
         rCam(1);
         copy_frame_buffer(fb,imgL,buf_len);
+        normalize_image(imgL,img_width,img_height);
         esp_camera_fb_return(fb);
         
         xTaskCreatePinnedToCore(disparity_task, "Disparity Task", 4096, (void *)params, 1, NULL, 1);
