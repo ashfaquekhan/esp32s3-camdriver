@@ -29,6 +29,7 @@
         "type_traits": "c",
         "esp_heap_caps.h": "c",
         "nvs_flash.h": "c",
-        "freertos.h": "c"
+        "freertos.h": "c",
+        "*.tcc": "cpp"
     }
 }
