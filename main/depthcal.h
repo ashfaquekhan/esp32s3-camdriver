@@ -196,7 +196,7 @@ void calculate_disparity_half(uint8_t* imgL, uint8_t* imgR, uint8_t* disparity, 
 }
 
 // Function to calculate binary descriptors
-void compute_binary_descriptor(uint8_t* img, int width, int x, int y, int block_size, uint64_t* descriptor) {
+void compute_binary_descriptor(uint8_t* img, int width, int height, int x, int y, int block_size, uint64_t* descriptor) {
     int half_block = block_size / 2;
     int threshold = 128; // Threshold value for binary encoding
 
@@ -209,7 +209,7 @@ void compute_binary_descriptor(uint8_t* img, int width, int x, int y, int block_
             int pixel_y = y + by;
 
             // Boundary check
-            if (pixel_x >= 0 && pixel_x < width && pixel_y >= 0 && pixel_y < width) {
+            if (pixel_x >= 0 && pixel_x < width && pixel_y >= 0 && pixel_y < height) {
                 int pixel = img[pixel_y * width + pixel_x];
                 uint64_t bit = (pixel > threshold) ? 1 : 0;
                 *descriptor |= (bit << bit_pos);
@@ -234,32 +234,33 @@ int hamming_distance(uint64_t d1, uint64_t d2) {
 }
 
 // Function to calculate disparity using block matching
-void calculate_disparity_block_half_ORB(uint8_t* imgL, uint8_t* imgR, uint8_t* disparity, int width, int height, int max_disparity, int block_size) {
+void calculate_disparity_block_full_ORB(uint8_t* imgL, uint8_t* imgR, uint8_t* disparity, int width, int height, int max_disparity, int block_size) {
     // Initialize disparity map to zero
     memset(disparity, 0, width * height * sizeof(uint8_t));
 
-    int half_width = width / 2;
     int half_block = block_size / 2;
 
     for (int y = half_block; y < height - half_block; y++) {
-        for (int x = half_width + half_block; x < width - max_disparity - half_block; x++) {
+        for (int x = half_block; x < width - max_disparity - half_block; x++) {
             int min_hamming = INT_MAX;
             int best_disparity = 0;
 
             // Compute binary descriptor for the current block in the left image
             uint64_t left_descriptor;
-            compute_binary_descriptor(imgL, width, x, y, block_size, &left_descriptor);
+            compute_binary_descriptor(imgL, width, height, x, y, block_size, &left_descriptor);
 
-            // Compare blocks between the right half of the left frame and the left half of the right frame
+            // Compare blocks between left and right frames across full frame
             for (int d = 0; d < max_disparity; d++) {
                 uint64_t right_descriptor;
-                compute_binary_descriptor(imgR, width, x - half_width - d, y, block_size, &right_descriptor);
+                if (x - d - half_block >= 0) {
+                    compute_binary_descriptor(imgR, width, height, x - d, y, block_size, &right_descriptor);
 
-                int hamming = hamming_distance(left_descriptor, right_descriptor);
+                    int hamming = hamming_distance(left_descriptor, right_descriptor);
 
-                if (hamming < min_hamming) {
-                    min_hamming = hamming;
-                    best_disparity = d;
+                    if (hamming < min_hamming) {
+                        min_hamming = hamming;
+                        best_disparity = d;
+                    }
                 }
             }
 

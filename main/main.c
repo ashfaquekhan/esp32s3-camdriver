@@ -131,13 +131,13 @@ static esp_err_t init_camera(void)
         //CAMERA_GRAB_LATEST. Sets when buffers should be filled
     lCam(10);    
     esp_err_t err = esp_camera_init(&camera_config);
-    sensor_t * s = esp_camera_sensor_get();
-    s->set_vflip(s,1);
+    // sensor_t * s = esp_camera_sensor_get();
+    // s->set_vflip(s,1);
     esp_camera_deinit();
     rCam(10); 
     err = esp_camera_init(&camera_config);
-    s = esp_camera_sensor_get();
-    s->set_vflip(s,1);
+    // s = esp_camera_sensor_get();
+    // s->set_vflip(s,1);
 
     if (err != ESP_OK)
     {
@@ -185,7 +185,7 @@ void disparity_task(void* arg) {
 
     // calculate_disparity_block(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity,params->block_size);
     // calculate_disparity_block_half(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity,params->block_size);
-    calculate_disparity_block_half_ORB(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity,params->block_size);
+    calculate_disparity_block_full_ORB(params->imgL, params->imgR, params->disparity, params->img_width, params->img_height, params->max_disparity,params->block_size);
 
     // pushBroom(params->imgL, params->imgR, params->img_width, params->img_height, params->max_disparity);
 
@@ -215,7 +215,7 @@ esp_err_t jpg_stream_httpd_handler(httpd_req_t *req){
 
     int img_width = 96;   
     int img_height = 96;  
-    int max_disparity = 12; //24      
+    int max_disparity = 24; //24      
     int block_size=4;       //4    
     int jump_factor = 3;
     int buf_len = img_width * img_height;
