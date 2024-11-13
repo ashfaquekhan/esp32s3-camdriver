@@ -117,9 +117,9 @@ static esp_err_t camera_init(uint32_t xclk_freq_hz, pixformat_t pixel_format, fr
 
 
     esp_err_t ret = esp_camera_init(&camera_config);
-    esp_camera_deinit();
-    swap();
-    ret = esp_camera_init(&camera_config);
+    // esp_camera_deinit();
+    // swap();
+    // ret = esp_camera_init(&camera_config);
     if (ret != ESP_OK)
     {
         return ret;
@@ -135,7 +135,9 @@ static esp_err_t camera_init(uint32_t xclk_freq_hz, pixformat_t pixel_format, fr
     // Note: Do not call functions that set resolution, set picture format and PLL clock,
     // If you need to reset the appeal parameters, please reinitialize the sensor.
     sensor_t *s = esp_camera_sensor_get();
-    // s->set_vflip(s, 1); // flip it back
+    s->set_vflip(s, 1); // flip it back
+    s->set_special_effect(s, 2);
+
     // // initial sensors are flipped vertically and colors are a bit saturated
     // if (s->id.PID == OV3660_PID) {
     //     s->set_brightness(s, 1); // up the blightness just a bit
@@ -154,6 +156,7 @@ static esp_err_t camera_init(uint32_t xclk_freq_hz, pixformat_t pixel_format, fr
     camera_sensor_info_t *s_info = esp_camera_sensor_get_info(&(s->id));
 
     if (ESP_OK == ret && PIXFORMAT_JPEG == pixel_format && s_info->support_jpeg == true) {
+
         cur_xclk_freq_hz = xclk_freq_hz;
         cur_pixel_format = pixel_format;
         cur_frame_size = frame_size;
@@ -233,10 +236,11 @@ static uvc_fb_t* camera_fb_get_cb(void *cb_ctx)
 {
     (void)cb_ctx;
     s_fb.cam_fb_p = esp_camera_fb_get();
+
     if (!s_fb.cam_fb_p) {
         return NULL;
     }
-    swap();
+    // swap();
     s_fb.uvc_fb.buf = s_fb.cam_fb_p->buf;
     s_fb.uvc_fb.len = s_fb.cam_fb_p->len;
     s_fb.uvc_fb.width = s_fb.cam_fb_p->width;
@@ -261,7 +265,7 @@ static void camera_fb_return_cb(uvc_fb_t *fb, void *cb_ctx)
 
 void app_main(void)
 {
-    swapInit();
+    // swapInit();
     // if using esp-s3-eye board, show the GUI
 #if CONFIG_CAMERA_MODULE_ESP_S3_EYE
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
