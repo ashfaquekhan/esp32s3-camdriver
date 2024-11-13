@@ -26,6 +26,8 @@
         "ledc.h": "c",
         "sdkconfig.h": "c",
         "string": "cpp",
-        "type_traits": "c"
+        "type_traits": "c",
+        "cmath": "c",
+        "usb_device_uvc.h": "c"
     }
 }
