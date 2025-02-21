@@ -17,7 +17,9 @@ static const char* _STREAM_CONTENT_TYPE = "multipart/x-mixed-replace;boundary=" 
 static const char* _STREAM_BOUNDARY = "\r\n--" PART_BOUNDARY "\r\n";
 static const char* _STREAM_PART = "Content-Type: image/jpeg\r\nContent-Length: %u\r\n\r\n";
 
-#define CONFIG_XCLK_FREQ 20000000 
+// #define CONFIG_XCLK_FREQ 20000000
+#define CONFIG_XCLK_FREQ 10000000 
+
 
 static esp_err_t init_camera(void)
 {
@@ -45,7 +47,7 @@ static esp_err_t init_camera(void)
 
         .xclk_freq_hz = CONFIG_XCLK_FREQ,
 
-        .frame_size = FRAMESIZE_QVGA,
+        .frame_size = FRAMESIZE_VGA,
         .pixel_format = PIXFORMAT_JPEG,
         // .fb_location = CAMERA_FB_IN_PSRAM,
         .fb_location = CAMERA_FB_IN_DRAM,
