@@ -12,7 +12,7 @@
         "interface/ftdi/esp32_devkitj_v1.cfg",
         "target/esp32s3.cfg"
     ],
-    "idf.portWin": "COM15",
+    "idf.portWin": "COM16",
     "idf.pythonBinPathWin": "C:\\Users\\ashfa\\.espressif\\python_env\\idf5.0_py3.11_env\\Scripts\\python.exe",
     "idf.toolsPathWin": "C:\\Users\\ashfa\\.espressif",
     "idf.flashType": "UART",
@@ -22,6 +22,8 @@
         "api.h": "c",
         "esp_netif.h": "c",
         "esp_log.h": "c",
-        "*.inc": "c"
-    }
+        "*.inc": "c",
+        "esp_camera.h": "c"
+    },
+    "idf.pythonInstallPath": "C:\\Users\\ashfa\\.espressif\\tools\\idf-python\\3.11.2\\python.exe"
 }
